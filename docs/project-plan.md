@@ -2,7 +2,6 @@
 title: "Sooke Community App -- Project Plan"
 ---
 
-
 This document is the source of truth for the current state of the Sooke Community App project.
 
 ---
@@ -91,12 +90,12 @@ This is a personal project with no monetization goal. The developer is building 
 
 ## User Roles
 
-| Role | How they authenticate | Capabilities |
-|---|---|---|
-| Anonymous visitor | No account needed | Browse businesses, menus, events, map. Read-only. |
-| General user | Social login (Google/Apple/Facebook) | Everything anonymous can do + submit events for review + subscribe to notifications. |
-| Business owner | Social login + manually promoted by Super Admin | Everything general user can do + edit their own business listing, menus, hours. Approve or reject events at their venue. |
-| Super Admin (developer) | Social login + hardcoded role | Everything. Add/remove businesses, promote users, approve/reject any event, manage all content. |
+| Role                    | How they authenticate                           | Capabilities                                                                                                             |
+| ----------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Anonymous visitor       | No account needed                               | Browse businesses, menus, events, map. Read-only.                                                                        |
+| General user            | Social login (Google/Apple/Facebook)            | Everything anonymous can do + submit events for review + subscribe to notifications.                                     |
+| Business owner          | Social login + manually promoted by Super Admin | Everything general user can do + edit their own business listing, menus, hours. Approve or reject events at their venue. |
+| Super Admin (developer) | Social login + hardcoded role                   | Everything. Add/remove businesses, promote users, approve/reject any event, manage all content.                          |
 
 ### Business Owner Verification Flow
 
@@ -167,14 +166,14 @@ See [ADR-006](/decisions/006-curated-tags-over-freeform/) for why we chose curat
 
 We test every layer of the application. The testing pyramid guides our approach: many unit tests, fewer integration tests, fewer E2E tests.
 
-| Layer | What it tests | Tools |
-|---|---|---|
-| Unit tests (Go) | Individual functions, service logic, validation | Go standard `testing` package, table-driven tests |
-| Unit tests (Svelte) | Component rendering, reactive logic, form validation | Vitest + Svelte Testing Library |
-| Integration tests (API) | HTTP handlers with real DB, middleware chains | Go `testing` + `httptest` + test Postgres container |
-| Integration tests (DB) | Migrations, queries, constraints, foreign keys | Go `testing` + test Postgres container |
-| API contract tests | Response shapes, status codes, error formats | Go `testing` or Hurl |
-| E2E tests | Full user flows through the app | Playwright |
+| Layer                   | What it tests                                        | Tools                                               |
+| ----------------------- | ---------------------------------------------------- | --------------------------------------------------- |
+| Unit tests (Go)         | Individual functions, service logic, validation      | Go standard `testing` package, table-driven tests   |
+| Unit tests (Svelte)     | Component rendering, reactive logic, form validation | Vitest + Svelte Testing Library                     |
+| Integration tests (API) | HTTP handlers with real DB, middleware chains        | Go `testing` + `httptest` + test Postgres container |
+| Integration tests (DB)  | Migrations, queries, constraints, foreign keys       | Go `testing` + test Postgres container              |
+| API contract tests      | Response shapes, status codes, error formats         | Go `testing` or Hurl                                |
+| E2E tests               | Full user flows through the app                      | Playwright                                          |
 
 Every phase sub-task specifies which test layers are required. No sub-task is complete until its tests pass.
 
@@ -215,9 +214,9 @@ Each phase is a milestone. Each phase contains sub-tasks. Each sub-task must inc
 
 ### Phase 1 -- Project Scaffolding
 
-- [ ] Initialize Capacitor + SvelteKit project
-- [ ] Verify app builds and runs on iOS simulator
-- [ ] Verify app builds and runs on Android emulator
+- [x] Initialize Capacitor + SvelteKit project
+- [x] Verify app builds and runs on iOS simulator
+- [x] Verify app builds and runs on Android emulator
 - [ ] Scaffold Go + Chi API with health check endpoint
 - [ ] Write test for health check endpoint
 - [ ] Set up PostgreSQL in Docker with `docker-compose`
@@ -380,16 +379,16 @@ Each phase is a milestone. Each phase contains sub-tasks. Each sub-task must inc
 
 ## Developer Environment
 
-| Tool | Detail |
-|---|---|
-| Primary dev machine | MacBook Pro M4 Pro 48GB |
-| iOS builds | On MBP (Xcode required) |
-| Android testing | Developer's personal Android phone |
-| Windows PC | Available for cross-platform testing |
-| Languages | Go, TypeScript, Svelte, some Rust |
-| Prior Capacitor experience | None (new for this project) |
+| Tool                       | Detail                               |
+| -------------------------- | ------------------------------------ |
+| Primary dev machine        | MacBook Pro M4 Pro 48GB              |
+| iOS builds                 | On MBP (Xcode required)              |
+| Android testing            | Developer's personal Android phone   |
+| Windows PC                 | Available for cross-platform testing |
+| Languages                  | Go, TypeScript, Svelte, some Rust    |
+| Prior Capacitor experience | None (new for this project)          |
 | Prior SvelteKit experience | Familiar with Svelte, some SvelteKit |
-| Prior Railway experience | Basic familiarity |
+| Prior Railway experience   | Basic familiarity                    |
 
 ---
 

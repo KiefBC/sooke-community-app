@@ -217,8 +217,8 @@ Each phase is a milestone. Each phase contains sub-tasks. Each sub-task must inc
 - [x] Initialize Capacitor + SvelteKit project
 - [x] Verify app builds and runs on iOS simulator
 - [x] Verify app builds and runs on Android emulator
-- [ ] Scaffold Go + Chi API with health check endpoint
-- [ ] Write test for health check endpoint
+- [x] Scaffold Go + Chi API with health check endpoint
+- [x] Write test for health check endpoint
 - [ ] Set up PostgreSQL in Docker with `docker-compose`
 - [ ] Verify API connects to Postgres
 - [ ] Set up `.env` config pattern for local development

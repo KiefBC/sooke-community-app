@@ -1,1 +1,6 @@
 /my-app/android/.idea
+
+# Go Binaries
+/server/bin/
+
+.env

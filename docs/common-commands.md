@@ -2,7 +2,6 @@
 title: "Common Commands"
 ---
 
-
 This document lists the commands needed to run, build, and manage the project. It is updated as new tools and services are added.
 
 ---
@@ -51,6 +50,39 @@ npm run preview
 This serves the built static site locally so you can verify the production output before deploying.
 
 ---
+
+## Go Server
+
+The backend API is written in Go using [Chi](https://github.com/go-chi/chi). The API lives in the server/ directory.
+
+### Prerequisites
+
+- A supported Go toolchain (see `server/go.mod` for the minimum required version)
+
+### Install dependencies
+
+```bash
+cd server
+go mod download
+```
+
+### Run API Locally
+
+```bash
+cd server
+go run ./cmd/api
+```
+
+The server defaults to port 8080. Set the `PORT` environment variable to change the port.
+
+### Build the binary
+
+```bash
+cd server
+go build -o bin/api ./cmd/api
+```
+
+This will produce an executable binary at `server/bin/api` that can be run on the target platform.
 
 ## Sections to Add Later
 

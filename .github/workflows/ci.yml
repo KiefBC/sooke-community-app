@@ -37,6 +37,29 @@ jobs:
       - name: Build
         run: npm run build
 
+  build-and-test-server:
+    name: Build & Test (my-app/server)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: my-app/server
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: my-app/server/go.mod
+          cache-dependency-path: my-app/server/go.sum
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test -race ./...
+
   build-docs:
     name: Build docs (starlight-docs)
     runs-on: ubuntu-latest

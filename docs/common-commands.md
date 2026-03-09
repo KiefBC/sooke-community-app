@@ -57,7 +57,7 @@ The backend API is written in Go using [Chi](https://github.com/go-chi/chi). The
 
 ### Prerequisites
 
-- Go 1.24 or later
+- A supported Go toolchain (see `server/go.mod` for the minimum required version)
 
 ### Install dependencies
 

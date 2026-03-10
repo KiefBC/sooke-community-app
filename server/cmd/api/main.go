@@ -15,7 +15,9 @@ import (
 )
 
 func main() {
-	_ = godotenv.Load("../.env") // Get from Project Root
+	// godotenv.Load will not return an error if the file is missing, so we can ignore it
+	_ = godotenv.Load("../.env")
+	_ = godotenv.Load("./.env")
 
 	port := os.Getenv("PORT")
 	if port == "" {

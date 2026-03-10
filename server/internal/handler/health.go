@@ -2,10 +2,12 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 )
 
 // HealthResponse represents the JSON response for the health check endpoint.
@@ -17,10 +19,13 @@ type HealthResponse struct {
 // HealthHandler returns an HTTP handler function that checks the health of the application and its database connection.
 func HealthHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
 		dbStatus := "connected"
 		if db == nil {
 			dbStatus = "disconnected"
-		} else if err := db.Ping(); err != nil {
+		} else if err := db.PingContext(ctx); err != nil {
 			dbStatus = "disconnected"
 		}
 

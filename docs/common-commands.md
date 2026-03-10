@@ -100,7 +100,7 @@ cd server
 TEST_DATABASE_URL="<your_test_database_url>" go test ./...
 ```
 
-This runs the full test suite including integration tests that verify database connectivity. Replace `<password>` with the actual password for the `sooke_app` user.
+This runs the full test suite including integration tests that verify database connectivity.
 
 ---
 
@@ -128,13 +128,13 @@ go run ./cmd/api
 ```
 
 ```bash
-curl http://localhost:8989/api/v1/health
+curl http://localhost:8080/api/v1/health
 ```
 
 Expected response when the database is reachable:
 
 ```json
-{"status":"ok","db_status":"connected"}
+{ "status": "ok", "db_status": "connected" }
 ```
 
 ---

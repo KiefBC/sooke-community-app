@@ -271,3 +271,26 @@ Hosted on Cloudflare Pages since the developer already uses Cloudflare.
 Advanced features (analytics, moderation tools, audit logs) are deferred to a future phase.
 
 **Decision:** Separate SvelteKit web app on Cloudflare Pages. Simple CRUD for MVP.
+
+---
+
+## Entry 13: Local Development Database
+
+**Date:** 2026-03-09
+
+**Question:** Should we use Docker for local Postgres, or connect to the existing Postgres on the developer's NAS?
+
+**Discussion:**
+The project plan originally specified "PostgreSQL running in Docker" with a `docker-compose.yml`. However, the developer already runs a Postgres instance on a Synology NAS on the local network. The instance is always available during development.
+
+We considered three options:
+
+1. **NAS only** -- use the existing Postgres instance. No Docker setup needed.
+2. **NAS + Docker fallback** -- primary dev against NAS, but also create a `docker-compose.yml` for portability.
+3. **Docker only** -- stick with the original plan, ignore the NAS.
+
+The `.env` config pattern means the Go application does not know where Postgres is running. Switching between NAS, Docker, or Railway is a single environment variable change. This made the decision low-stakes -- we can add a `docker-compose.yml` later if a second developer joins.
+
+The developer manages the database using TablePlus on macOS.
+
+**Decision:** NAS-hosted Postgres for local development. No Docker. See [ADR-008](/decisions/008-nas-postgres-over-docker/).

@@ -43,8 +43,9 @@ This is a personal project with no monetization goal. The developer is building 
 
 ### Database
 
-- **Local dev:** PostgreSQL running in Docker.
+- **Local dev:** PostgreSQL on the developer's NAS. No Docker required.
 - **Production:** Railway managed PostgreSQL (same schema, environment variable swap only).
+- **See:** [ADR-008](/decisions/008-nas-postgres-over-docker/) for why we chose NAS-hosted Postgres over Docker for local development.
 - **Schema:** businesses, menus, menu_items, events, event_types, business_categories, users, roles, business_hours, device_tokens.
 - **IDs:** Every public-facing entity has both a numeric primary key and a unique slug (e.g., `joes-coffee-shop`). Slugs are used in API responses and prepared for future deep linking.
 
@@ -219,10 +220,10 @@ Each phase is a milestone. Each phase contains sub-tasks. Each sub-task must inc
 - [x] Verify app builds and runs on Android emulator
 - [x] Scaffold Go + Chi API with health check endpoint
 - [x] Write test for health check endpoint
-- [ ] Set up PostgreSQL in Docker with `docker-compose`
-- [ ] Verify API connects to Postgres
-- [ ] Set up `.env` config pattern for local development
-- [ ] Write integration test for DB connection
+- [x] Set up PostgreSQL connection (NAS-hosted -- see ADR-008)
+- [x] Verify API connects to Postgres
+- [x] Set up `.env` config pattern for local development
+- [x] Write integration test for DB connection
 - [ ] Set up Starlight documentation site and deploy to Cloudflare Pages
 
 ### Phase 2 -- Database Schema and Migrations

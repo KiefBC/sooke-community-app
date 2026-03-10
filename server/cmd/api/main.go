@@ -8,16 +8,36 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
+
+	"github.com/kiefbc/sooke_app/server/internal/database"
 	"github.com/kiefbc/sooke_app/server/internal/router"
 )
 
 func main() {
+	// godotenv.Load will not return an error if the file is missing, so we can ignore it
+	_ = godotenv.Load("../.env")
+	_ = godotenv.Load("./.env")
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	r := router.New()
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		log.Fatal("DATABASE_URL environment variable is required")
+	}
+
+	db, err := database.Connect(databaseURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	log.Println("Database connection established...")
+
+	r := router.New(db)
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", port),

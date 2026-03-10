@@ -262,6 +262,22 @@ This document records deferred features, documented alternatives, and ideas to r
 - Less polished than Starlight. Limited customization.
 - Rust dependency just for documentation tooling.
 
+### Local Development Database: Docker
+
+**Decision:** We chose NAS-hosted Postgres. See [ADR-008](/decisions/008-nas-postgres-over-docker/).
+
+**Why it was considered:**
+- Portable. Any developer can run `docker-compose up` without external infrastructure.
+- Isolated from other services on the NAS.
+- Reproducible environment across machines.
+
+**Why it was not chosen:**
+- The developer already has Postgres running on a NAS that is always available.
+- Docker adds resource overhead and setup complexity with no benefit in the current single-developer context.
+- The `.env` pattern makes the database location a configuration concern, not a code concern. Switching to Docker later requires zero code changes.
+
+**Revisit if:** A second developer joins the project and needs a portable database setup. Adding a `docker-compose.yml` at that point is straightforward.
+
 ### Documentation: VitePress
 
 **Why it was considered:**

@@ -84,14 +84,68 @@ go build -o bin/api ./cmd/api
 
 This will produce an executable binary at `server/bin/api` that can be run on the target platform.
 
+### Run tests
+
+```bash
+cd server
+go test ./...
+```
+
+This runs all unit tests. Integration tests that require a database are skipped when `TEST_DATABASE_URL` is not set.
+
+### Run tests with database (integration)
+
+```bash
+cd server
+TEST_DATABASE_URL="<your_test_database_url>" go test ./...
+```
+
+This runs the full test suite including integration tests that verify database connectivity.
+
+---
+
+## PostgreSQL
+
+The development database runs on the developer's NAS. See [ADR-008](/decisions/008-nas-postgres-over-docker/) for why we chose this over Docker. Connection details (host, port, credentials) are configured via environment variables in `.env`.
+
+The database client used for manual inspection is [TablePlus](https://tableplus.com/) on macOS.
+
+### Environment setup
+
+1. Copy `.env.example` to `.env` at the project root.
+2. Fill in the real values for `DATABASE_URL` and `TEST_DATABASE_URL`.
+3. The `.env` file is gitignored and must never be committed.
+
+The Go API loads `.env` automatically at startup via `godotenv`. In production (Railway), environment variables are set directly -- no `.env` file is needed.
+
+### Verify the connection
+
+Start the API and hit the health endpoint:
+
+```bash
+cd server
+go run ./cmd/api
+```
+
+```bash
+curl http://localhost:8080/api/v1/health
+```
+
+Expected response when the database is reachable:
+
+```json
+{ "status": "ok", "db_status": "connected" }
+```
+
+---
+
 ## Sections to Add Later
 
 The following sections will be added as each tool or service is set up:
 
-- Go API (run, test, build, lint)
 - SvelteKit mobile app (run, test, build)
 - Capacitor (iOS build, Android build, sync)
-- PostgreSQL (Docker, migrations, seed data)
+- PostgreSQL migrations and seed data
 - Admin dashboard (run, test, build, deploy)
 - Cloudflare R2 (upload, configure)
 - Clerk (configure, test tokens)

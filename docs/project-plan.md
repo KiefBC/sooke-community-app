@@ -224,7 +224,7 @@ Each phase is a milestone. Each phase contains sub-tasks. Each sub-task must inc
 - [x] Verify API connects to Postgres
 - [x] Set up `.env` config pattern for local development
 - [x] Write integration test for DB connection
-- [ ] Set up Starlight documentation site and deploy to Cloudflare Pages
+- [x] Set up Starlight documentation site and deploy to Cloudflare Pages
 
 ### Phase 2 -- Database Schema and Migrations
 
@@ -405,7 +405,7 @@ These are hard constraints for development. Do not deviate from these without ex
 - Postgres is the only server-side data store. Do not introduce other stores without discussion.
 - Business logic lives in Go, not in the frontend.
 - Svelte components should be small and composable.
-- MapLibre is used via JavaScript in the Capacitor webview. Do not use a native maps plugin.
+- MapLibre is used via Typescript in the Capacitor webview. Do not use a native maps plugin.
 - Clerk JWT validation happens in Chi middleware on every protected route.
 - Businesses are only created by the Super Admin. No self-registration.
 - No free-form tags at MVP. Use the curated tag list managed by Super Admin.

@@ -13,6 +13,7 @@ export default defineConfig({
 					label: 'Project',
 					items: [
 						{ label: 'Project Plan', slug: 'project-plan' },
+						{ label: 'Database Schema', slug: 'database-schema' },
 						{ label: 'Style Guide', slug: 'style-guide' },
 						{ label: 'Common Commands', slug: 'common-commands' },
 						{ label: 'Future Ideas and Alternatives', slug: 'future-ideas-and-alternatives' },

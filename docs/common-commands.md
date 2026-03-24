@@ -139,13 +139,59 @@ Expected response when the database is reachable:
 
 ---
 
+## Database Migrations and Seed Data
+
+We use [goose](https://github.com/pressly/goose) for schema migrations. See [ADR-009](/decisions/009-use-goose-for-migrations/) for why we chose goose.
+
+Migration files live in `server/migrations/`. Migrations auto-run at API startup, so manual execution is usually unnecessary. The commands below are for development and troubleshooting.
+
+### Prerequisites
+
+- goose CLI: `go install github.com/pressly/goose/v3/cmd/goose@latest`
+
+### Run all pending migrations
+
+```bash
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DATABASE_URL" goose -dir server/migrations up
+```
+
+### Roll back the last migration
+
+```bash
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DATABASE_URL" goose -dir server/migrations down
+```
+
+### Check migration status
+
+```bash
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DATABASE_URL" goose -dir server/migrations status
+```
+
+### Create a new migration
+
+```bash
+goose -dir server/migrations create <name> sql
+```
+
+This creates a pair of timestamped `.sql` files (up and down) in `server/migrations/`.
+
+### Seed the database with sample data
+
+```bash
+cd server
+go run ./cmd/seed
+```
+
+This inserts sample Sooke businesses, categories, and event types for development. Requires `DATABASE_URL` to be set. The seed runner is idempotent -- it can be run multiple times without creating duplicates.
+
+---
+
 ## Sections to Add Later
 
 The following sections will be added as each tool or service is set up:
 
 - SvelteKit mobile app (run, test, build)
 - Capacitor (iOS build, Android build, sync)
-- PostgreSQL migrations and seed data
 - Admin dashboard (run, test, build, deploy)
 - Cloudflare R2 (upload, configure)
 - Clerk (configure, test tokens)

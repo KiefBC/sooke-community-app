@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 		panic("failed to set goose dialect: " + err.Error())
 	}
 
-	migrationsPath := os.Getenv("MIGRATION_PATH")
+	migrationsPath := os.Getenv("TEST_MIGRATION_PATH")
 	if migrationsPath == "" {
 		migrationsPath = "../../../server/migrations"
 	}
@@ -57,7 +57,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestMigrationRoundTrip(t *testing.T) {
-	migrationsPath := os.Getenv("MIGRATION_PATH")
+	migrationsPath := os.Getenv("TEST_MIGRATION_PATH")
 	if migrationsPath == "" {
 		migrationsPath = "../../../server/migrations"
 	}

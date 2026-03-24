@@ -1,6 +1,14 @@
+# Android Studio
 /my-app/android/.idea
 
 # Go Binaries
 /server/bin/
 
+# NONE OF YOUR BUSINESS
 .env
+
+# sqls Config
+.sqls.yaml
+
+# GO AWAY!
+.DS_Store

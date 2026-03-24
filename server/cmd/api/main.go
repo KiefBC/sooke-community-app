@@ -25,6 +25,12 @@ func main() {
 		port = "8080"
 	}
 
+	migration_path := os.Getenv("MIGRATION_PATH")
+	if migration_path == "" {
+		// Hardcoding this path is not ideal, but it makes it easier to run the server without having to set the MIGRATION_PATH variable every time
+		migration_path = "./migrations"
+	}
+
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		log.Fatal("DATABASE_URL environment variable is required")
@@ -37,6 +43,12 @@ func main() {
 	defer db.Close()
 
 	log.Println("Database connection established...")
+
+	if err := database.Migrate(db, migration_path); err != nil {
+		log.Fatalf("Failed to run database migrations: %v", err)
+	}
+
+	log.Printf("Database migrations completed")
 
 	r := router.New(db)
 

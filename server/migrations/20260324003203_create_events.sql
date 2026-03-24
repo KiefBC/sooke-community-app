@@ -4,7 +4,7 @@ CREATE TABLE events (
   id BIGSERIAL PRIMARY KEY,
   event_type_id BIGINT NOT NULL REFERENCES event_types (id),
   submitted_by BIGINT NOT NULL REFERENCES users (id),
-  business_id BIGINT REFERENCES businesses (id) ON DELETE SET NULL,
+  business_id BIGINT REFERENCES businesses (id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
   description TEXT,

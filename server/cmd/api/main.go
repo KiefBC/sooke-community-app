@@ -27,7 +27,7 @@ func main() {
 
 	migrationPath := os.Getenv("MIGRATION_PATH")
 	if migrationPath == "" {
-		// Hardcoding this path is not ideal, but it makes it easier to run the server without having to set the MIGRATION_PATH variable every time
+		// Default assumes running from the server/ directory (e.g. cd server && go run ./cmd/api)
 		migrationPath = "./migrations"
 	}
 

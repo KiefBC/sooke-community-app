@@ -49,7 +49,7 @@ func seed(db *sql.DB) error {
 	}
 
 	for _, role := range seedUserRoles {
-		if _, err := db.Exec("INSERT INTO user_roles (name) VALUES ($1)", role.name); err != nil {
+		if _, err := db.Exec("INSERT INTO user_roles (name) VALUES ($1) ON CONFLICT (name) DO NOTHING", role.name); err != nil {
 			return fmt.Errorf("failed to seed role %q: %w", role.name, err)
 		}
 	}
@@ -67,7 +67,8 @@ func seed(db *sql.DB) error {
 
 	for _, u := range seedUsers {
 		if _, err := db.Exec(
-			"INSERT INTO users (clerk_id, role_id, email, display_name) VALUES ($1, (SELECT id FROM user_roles WHERE name = $2), $3, $4)",
+			`INSERT INTO users (clerk_id, role_id, email, display_name) VALUES ($1, (SELECT id FROM user_roles WHERE name = $2), $3, $4)
+			 ON CONFLICT (clerk_id) DO UPDATE SET role_id = (SELECT id FROM user_roles WHERE name = $2), email = $3, display_name = $4`,
 			u.ClerkID, u.Role, u.Email, u.DisplayName,
 		); err != nil {
 			return fmt.Errorf("failed to seed user %q: %w", u.Email, err)
@@ -95,7 +96,7 @@ func seed(db *sql.DB) error {
 	}
 
 	for _, cat := range seedBusinessCat {
-		if _, err := db.Exec("INSERT INTO business_categories (name, slug) VALUES ($1, $2)", cat.name, slug.GenerateSlug(cat.name)); err != nil {
+		if _, err := db.Exec("INSERT INTO business_categories (name, slug) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING", cat.name, slug.GenerateSlug(cat.name)); err != nil {
 			return fmt.Errorf("failed to seed business category %q: %w", cat.name, err)
 		}
 	}
@@ -115,40 +116,42 @@ func seed(db *sql.DB) error {
 	}
 
 	for _, et := range seedEventType {
-		if _, err := db.Exec("INSERT INTO event_types (name, slug) VALUES ($1, $2)", et.name, slug.GenerateSlug(et.name)); err != nil {
+		if _, err := db.Exec("INSERT INTO event_types (name, slug) VALUES ($1, $2) ON CONFLICT (slug) DO NOTHING", et.name, slug.GenerateSlug(et.name)); err != nil {
 			return fmt.Errorf("failed to seed event type %q: %w", et.name, err)
 		}
 	}
 
 	var seedBusinesses = []struct {
-		Name        string
-		Description string
-		Address     string
-		Lat         float64
-		Lng         float64
-		Category    string
-		OwnerID int
-		Phone   string
-		Email   string
-		Website string
+		Name         string
+		Description  string
+		Address      string
+		Lat          float64
+		Lng          float64
+		Category     string
+		OwnerClerkID string
+		Phone        string
+		Email        string
+		Website      string
 	}{
-		{"Sooke Harbour House", "Historic waterfront inn with Pacific Northwest fine dining", "1528 Whiffen Spit Rd", 48.356618349381755, -123.72733056442932, "Restaurant", 1, "111-111-1111", "info@sookeharbourhouse.dev", "https://sookeharbourhouse.dev"},
-		{"Mom's Cafe", "Family-friendly breakfast and lunch spot loved by locals", "2036 Shields Rd", 48.377112314153386, -123.7254915288472, "Cafe", 2, "222-222-2222", "hello@momscafe.dev", "https://momscafe.dev"},
-		{"Sooke Landing Marina", "Full-service marina with boat rentals and moorage", "6585 Goodmere Rd", 48.37801614501773, -123.71648471022064, "Outdoor Recreation", 3, "333-333-3333", "dock@sookemarina.dev", "https://sookemarina.dev"},
-		{"King Tide Fishing Charters", "Guided salmon and halibut fishing on the Strait of Juan de Fuca", "6969 Sea Lion Way", 48.35785881994283, -123.72657954591688, "Outdoor Recreation", 0, "", "", ""},
-		{"Sooke Community Hall", "Local gathering space for markets, meetings, and events", "2037 Shields Rd", 48.37759971334821, -123.72517166628057, "Community", 0, "", "", ""},
-		{"The Stick In The Mud's Roastoreum", "Small-batch coffee roaster and cozy neighbourhood cafe", "6711 Eustace Rd", 48.37789738050146, -123.7245055441908, "Cafe", 0, "", "", ""},
+		{"Sooke Harbour House", "Historic waterfront inn with Pacific Northwest fine dining", "1528 Whiffen Spit Rd", 48.356618349381755, -123.72733056442932, "Restaurant", "seed_general_user", "111-111-1111", "info@sookeharbourhouse.dev", "https://sookeharbourhouse.dev"},
+		{"Mom's Cafe", "Family-friendly breakfast and lunch spot loved by locals", "2036 Shields Rd", 48.377112314153386, -123.7254915288472, "Cafe", "seed_business_owner", "222-222-2222", "hello@momscafe.dev", "https://momscafe.dev"},
+		{"Sooke Landing Marina", "Full-service marina with boat rentals and moorage", "6585 Goodmere Rd", 48.37801614501773, -123.71648471022064, "Outdoor Recreation", "seed_super_admin", "333-333-3333", "dock@sookemarina.dev", "https://sookemarina.dev"},
+		{"King Tide Fishing Charters", "Guided salmon and halibut fishing on the Strait of Juan de Fuca", "6969 Sea Lion Way", 48.35785881994283, -123.72657954591688, "Outdoor Recreation", "", "", "", ""},
+		{"Sooke Community Hall", "Local gathering space for markets, meetings, and events", "2037 Shields Rd", 48.37759971334821, -123.72517166628057, "Community", "", "", "", ""},
+		{"The Stick In The Mud's Roastoreum", "Small-batch coffee roaster and cozy neighbourhood cafe", "6711 Eustace Rd", 48.37789738050146, -123.7245055441908, "Cafe", "", "", "", ""},
 	}
 
 	for _, biz := range seedBusinesses {
-		var ownerID interface{}
-		if biz.OwnerID > 0 {
-			ownerID = biz.OwnerID
+		var ownerClerkID interface{}
+		if biz.OwnerClerkID != "" {
+			ownerClerkID = biz.OwnerClerkID
 		}
 		if _, err := db.Exec(
 			`INSERT INTO businesses (owner_id, category_id, name, slug, description, phone, email, website, address, latitude, longitude)
-			 VALUES ($1, (SELECT id FROM business_categories WHERE name = $2), $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-			ownerID, biz.Category, biz.Name, slug.GenerateSlug(biz.Name), biz.Description, biz.Phone, biz.Email, biz.Website, biz.Address, biz.Lat, biz.Lng,
+			 VALUES ((SELECT id FROM users WHERE clerk_id = $1), (SELECT id FROM business_categories WHERE name = $2), $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			 ON CONFLICT (slug) DO UPDATE SET owner_id = (SELECT id FROM users WHERE clerk_id = $1), category_id = (SELECT id FROM business_categories WHERE name = $2),
+			 name = $3, description = $5, phone = $6, email = $7, website = $8, address = $9, latitude = $10, longitude = $11`,
+			ownerClerkID, biz.Category, biz.Name, slug.GenerateSlug(biz.Name), biz.Description, biz.Phone, biz.Email, biz.Website, biz.Address, biz.Lat, biz.Lng,
 		); err != nil {
 			return fmt.Errorf("failed to seed business %q: %w", biz.Name, err)
 		}
@@ -219,7 +222,8 @@ func seed(db *sql.DB) error {
 	for _, bh := range seedBusinessHours {
 		if _, err := db.Exec(
 			`INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
-			 VALUES ((SELECT id FROM businesses WHERE name = $1), $2, $3, $4, $5)`,
+			 VALUES ((SELECT id FROM businesses WHERE name = $1), $2, $3, $4, $5)
+			 ON CONFLICT (business_id, day_of_week) DO UPDATE SET open_time = $3, close_time = $4, is_closed = $5`,
 			bh.Business, bh.DayOfWeek, bh.OpenTime, bh.CloseTime, bh.IsClosed,
 		); err != nil {
 			return fmt.Errorf("failed to seed business hours for %q day %d: %w", bh.Business, bh.DayOfWeek, err)
@@ -325,7 +329,8 @@ func seed(db *sql.DB) error {
 			   (SELECT id FROM users WHERE clerk_id = 'seed_super_admin'),
 			   (SELECT id FROM businesses WHERE name = $2),
 			   $3, $4, $5, $6, $7, $8
-			 )`,
+			 )
+			 ON CONFLICT (slug) DO UPDATE SET description = $5, starts_at = $6, ends_at = $7, status = $8`,
 			event.EventType, event.Business, event.Name, slug.GenerateSlug(event.Name),
 			event.Description, event.StartTime, endTime, event.Status,
 		); err != nil {

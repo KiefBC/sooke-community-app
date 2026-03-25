@@ -149,7 +149,8 @@ func seed(db *sql.DB) error {
 		if _, err := db.Exec(
 			`INSERT INTO businesses (owner_id, category_id, name, slug, description, phone, email, website, address, latitude, longitude)
 			 VALUES ((SELECT id FROM users WHERE clerk_id = $1), (SELECT id FROM business_categories WHERE name = $2), $3, $4, $5, $6, $7, $8, $9, $10, $11)
-			 ON CONFLICT (slug) DO UPDATE SET owner_id = (SELECT id FROM users WHERE clerk_id = $1), category_id = (SELECT id FROM business_categories WHERE name = $2),
+			 ON CONFLICT (slug) DO UPDATE SET owner_id = COALESCE((SELECT id FROM users WHERE clerk_id = $1), businesses.owner_id),
+			 category_id = (SELECT id FROM business_categories WHERE name = $2),
 			 name = $3, description = $5, phone = $6, email = $7, website = $8, address = $9, latitude = $10, longitude = $11`,
 			ownerClerkID, biz.Category, biz.Name, slug.GenerateSlug(biz.Name), biz.Description, biz.Phone, biz.Email, biz.Website, biz.Address, biz.Lat, biz.Lng,
 		); err != nil {

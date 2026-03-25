@@ -176,7 +176,7 @@ We test every layer of the application. The testing pyramid guides our approach:
 | API contract tests      | Response shapes, status codes, error formats         | Go `testing` or Hurl                                |
 | E2E tests               | Full user flows through the app                      | Playwright                                          |
 
-Every phase sub-task specifies which test layers are required. No sub-task is complete until its tests pass.
+Every milestone issue specifies which test layers are required. No issue is complete until its tests pass.
 
 ---
 
@@ -209,11 +209,13 @@ Every phase sub-task specifies which test layers are required. No sub-task is co
 
 ---
 
-## Development Phases
+## Development Milestones
 
-Each phase is a milestone. Each phase contains sub-tasks. Each sub-task must include tests and be verified before it is considered complete.
+Each milestone is tracked on GitHub. Each milestone contains one or more consolidated issues. Every issue includes tests in its acceptance criteria -- nothing is complete until tests pass.
 
-### Phase 1 -- Project Scaffolding
+Issues link: [github.com/KiefBC/sooke-community-app/issues](https://github.com/KiefBC/sooke-community-app/issues)
+
+### Project Scaffolding (Complete)
 
 - [x] Initialize Capacitor + SvelteKit project
 - [x] Verify app builds and runs on iOS simulator
@@ -226,146 +228,84 @@ Each phase is a milestone. Each phase contains sub-tasks. Each sub-task must inc
 - [x] Write integration test for DB connection
 - [x] Set up Starlight documentation site and deploy to Cloudflare Pages
 
-### Phase 2 -- Database Schema and Migrations
+### Genesis Protocol -- Database
 
-- [ ] Design and implement initial Postgres schema (businesses, menus, menu_items, events, users, roles, business_hours, business_categories, event_types)
-- [ ] Add slug fields to businesses and events
-- [ ] Add lat/lng coordinate fields to businesses and events
-- [ ] Write migration scripts (up and down)
-- [ ] Write constraint and migration tests
-- [ ] Seed database with sample Sooke businesses for development
+Set up the Postgres schema, migrations, and seed data that everything else builds on.
 
-### Phase 3 -- Business Listings API and UI
+- [ ] Database schema, migrations, and seed data ([#107](https://github.com/KiefBC/sooke-community-app/issues/107)) -- schema design, slug fields, lat/lng coordinates, reversible migrations with Goose, constraint tests, and sample Sooke business seed data
 
-- [ ] Implement `GET /api/v1/businesses` (list, with search and filtering)
-- [ ] Implement `GET /api/v1/businesses/:slug` (detail)
-- [ ] Write unit and integration tests for business endpoints
-- [ ] Write API contract tests for response shapes
-- [ ] Build business list UI component in Svelte
-- [ ] Build business detail UI component in Svelte
-- [ ] Write Svelte component tests with Vitest
+### First Contact -- Business Listings
 
-### Phase 4 -- Business Categories and Tags
+Stand up the business listings API and frontend so users can browse Sooke businesses.
 
-- [ ] Implement `GET /api/v1/categories` endpoint
-- [ ] Add category filtering to business list endpoint
-- [ ] Write tests for category endpoints and filtering
-- [ ] Build category filter UI component
-- [ ] Write component tests
+- [ ] Business listings API ([#108](https://github.com/KiefBC/sooke-community-app/issues/108)) -- `GET /api/v1/businesses` (list with search/filter), `GET /api/v1/businesses/:slug` (detail), unit/integration tests, contract tests
+- [ ] Business list and detail UI ([#109](https://github.com/KiefBC/sooke-community-app/issues/109)) -- Svelte list and detail components, loading/error states, Vitest component tests
+- [ ] Business category filtering ([#110](https://github.com/KiefBC/sooke-community-app/issues/110)) -- `GET /api/v1/categories` endpoint, category filter on business list, filter UI component, tests for both API and UI
 
-### Phase 5 -- Map Integration
+### Here Be Dragons -- Maps
 
-- [ ] Integrate MapLibre GL JS into the SvelteKit app
-- [ ] Display business pins on the map using stored coordinates
-- [ ] Build map view with clickable pins linking to business detail
-- [ ] Write E2E test for map interaction
-- [ ] Test map rendering on iOS and Android
+Integrate MapLibre GL JS and place business pins on a map of Sooke.
 
-### Phase 6 -- Events API and UI
+- [ ] MapLibre integration with business pins ([#111](https://github.com/KiefBC/sooke-community-app/issues/111)) -- MapLibre + MapTiler setup, business pins at lat/lng, clickable popups linking to detail, E2E tests, iOS/Android webview verification
 
-- [ ] Implement `GET /api/v1/events` (list, with search and filtering)
-- [ ] Implement `GET /api/v1/events/:slug` (detail)
-- [ ] Add event type filtering
-- [ ] Write unit, integration, and contract tests for event endpoints
-- [ ] Build event list and detail UI components
-- [ ] Display event pins on the map
-- [ ] Write component tests
+### The Daily Bugle -- Events
 
-### Phase 7 -- Event-Business Location Association
+Build out the events system -- API, frontend, map pins, and the event-business location link.
 
-- [ ] Implement event-business foreign key relationship in API
-- [ ] Build event creation form with "At a business" / "Public location" toggle
-- [ ] Auto-fill coordinates from business location when applicable
-- [ ] Write tests for event-business association logic
+- [ ] Events API and filtering ([#112](https://github.com/KiefBC/sooke-community-app/issues/112)) -- `GET /api/v1/events` (list with search/filter), `GET /api/v1/events/:slug` (detail), event type filtering, unit/integration/contract tests
+- [ ] Event list, detail, and map pins UI ([#113](https://github.com/KiefBC/sooke-community-app/issues/113)) -- Svelte event components, event pins on map (distinct from business pins), Vitest component tests
+- [ ] Event-business location association ([#114](https://github.com/KiefBC/sooke-community-app/issues/114)) -- foreign key relationship, event form with "At a business" / "Public location" toggle, auto-fill coordinates from business, association tests
 
-### Phase 8 -- Clerk Auth Integration
+### Who Goes There? -- Auth
 
-- [ ] Set up Clerk account and configure social login providers
-- [ ] Integrate Clerk into SvelteKit frontend
-- [ ] Implement JWT validation middleware in Go Chi
-- [ ] Write tests for auth middleware (valid token, expired token, missing token)
-- [ ] Protect write endpoints behind auth middleware
-- [ ] Verify login flow on iOS and Android
+Integrate Clerk for social login on the frontend and JWT validation on the backend.
 
-### Phase 9 -- Role System
+- [ ] Clerk auth integration ([#115](https://github.com/KiefBC/sooke-community-app/issues/115)) -- Clerk account setup, SvelteKit integration, Go Chi JWT middleware, protect write endpoints, middleware tests (valid/expired/missing token), iOS/Android login verification
 
-- [ ] Implement role model in database (Super Admin, Business Owner, General User)
-- [ ] Build role-checking middleware in Go
-- [ ] Scope business owner permissions to their specific business
-- [ ] Write tests for role-based access control
-- [ ] Build user promotion flow for Super Admin
+### The Chuunin Exams -- Roles
 
-### Phase 10 -- Business Owner Editing UI
+Implement the role system that controls who can do what.
 
-- [ ] Build edit form for business listing (scoped to owner's business)
-- [ ] Build menu management UI (add, edit, remove items)
-- [ ] Build business hours editing UI
-- [ ] Write E2E tests for owner editing flow
-- [ ] Test permission boundaries (owner cannot edit other businesses)
+- [ ] Role-based access control ([#116](https://github.com/KiefBC/sooke-community-app/issues/116)) -- role model in DB (super_admin, business_owner, general_user), role-checking middleware, scoped business owner permissions, user promotion endpoint, RBAC tests
 
-### Phase 11 -- Event Submission and Approval
+### The Gatekeepers -- Editing and Approval
 
-- [ ] Implement `POST /api/v1/events` (create, sets status to `pending_review`)
-- [ ] Implement approval/rejection endpoints for business owners and Super Admin
-- [ ] Add rate limiting on event submissions
-- [ ] Build event submission form UI
-- [ ] Build approval queue UI for business owners
-- [ ] Implement notification (in-app + email) for pending approvals
-- [ ] Write tests for full approval flow
+Give business owners control of their listings and build the event approval workflow.
 
-### Phase 12 -- Admin Dashboard Scaffolding
+- [ ] Business owner editing UI ([#117](https://github.com/KiefBC/sooke-community-app/issues/117)) -- edit form for business listing, menu management UI, business hours editing, E2E tests, permission boundary tests
+- [ ] Event submission and approval workflow ([#118](https://github.com/KiefBC/sooke-community-app/issues/118)) -- `POST /api/v1/events`, approve/reject endpoints, rate limiting, submission form, approval queue UI, notifications, full-flow tests
 
-- [ ] Initialize SvelteKit admin dashboard project
-- [ ] Deploy to Cloudflare Pages
-- [ ] Implement Super Admin auth check
-- [ ] Build navigation and layout
+### The Batcave -- Admin Dashboard
 
-### Phase 13 -- Admin CRUD
+Build the Super Admin dashboard as a separate SvelteKit app on Cloudflare Pages.
 
-- [ ] Build business management pages (list, create, edit, delete)
-- [ ] Build event management pages (list, edit, delete, approval queue)
-- [ ] Build user management pages (list, promote to business owner, link to business)
-- [ ] Build tag management pages (add, edit, remove categories and event types)
-- [ ] Write tests for admin operations
+- [ ] Admin dashboard scaffolding ([#119](https://github.com/KiefBC/sooke-community-app/issues/119)) -- SvelteKit project init, Cloudflare Pages deploy, Super Admin auth check, navigation and layout
+- [ ] Admin dashboard CRUD pages ([#120](https://github.com/KiefBC/sooke-community-app/issues/120)) -- business management, event management, user management, tag management, CRUD tests
 
-### Phase 14 -- Cloudflare R2 Integration
+### Sharingan Activated -- Images
 
-- [ ] Set up R2 bucket and access credentials
-- [ ] Implement image upload endpoint in Go API
-- [ ] Store image URLs in Postgres
-- [ ] Build image upload UI for business listings
-- [ ] Write tests for upload flow
+Add image upload support backed by Cloudflare R2.
 
-### Phase 15 -- Search and API Versioning
+- [ ] Image upload with Cloudflare R2 ([#121](https://github.com/KiefBC/sooke-community-app/issues/121)) -- R2 bucket setup, upload endpoint (jpg/png/webp, max 5MB), store URLs in Postgres, upload UI with drag-and-drop, upload tests
 
-- [ ] Implement full-text search for businesses (Postgres `ILIKE` or `tsvector`)
-- [ ] Implement full-text search for events
-- [ ] Verify all routes are prefixed with `/api/v1/`
-- [ ] Document API versioning strategy
-- [ ] Write search tests
+### The Palantir -- Search
 
-### Phase 16 -- Dockerize and Deploy
+Add full-text search and lock down API versioning.
 
-- [ ] Write Dockerfile for Go API
-- [ ] Push to Railway
-- [ ] Migrate local Postgres data to Railway managed Postgres
-- [ ] Update app to point at production API
-- [ ] Verify production deployment end-to-end
+- [ ] Full-text search and API versioning ([#122](https://github.com/KiefBC/sooke-community-app/issues/122)) -- Postgres full-text search for businesses and events, route audit for `/api/v1/` prefix, versioning docs, search tests
 
-### Phase 17 -- Production Polish and Device Testing
+### Evangelion Launch -- Deploy
 
-- [ ] UI polish, loading states, error handling
-- [ ] Test on real iOS device (MBP M4 Pro + Xcode)
-- [ ] Test on real Android device
-- [ ] Performance testing on lower-end Android device
-- [ ] Fix platform-specific issues
+Containerize the API and deploy everything to Railway.
 
-### Phase 18 -- App Store Submission
+- [ ] Dockerize and deploy to Railway ([#123](https://github.com/KiefBC/sooke-community-app/issues/123)) -- multi-stage Dockerfile, Railway deploy, migrate Postgres to Railway, update app to production API URL, end-to-end production verification
 
-- [ ] Prepare app store listings (screenshots, descriptions)
-- [ ] Write Terms of Service and Privacy Policy
-- [ ] Submit to Google Play
-- [ ] Submit to Apple App Store
+### Plus Ultra! -- Ship It
+
+Polish, test on real devices, and submit to app stores.
+
+- [ ] Production polish and device testing ([#124](https://github.com/KiefBC/sooke-community-app/issues/124)) -- UI polish and loading states, real iOS device testing, real Android device testing, performance testing on lower-end Android, platform-specific fixes
+- [ ] App store submission ([#125](https://github.com/KiefBC/sooke-community-app/issues/125)) -- app store listings and screenshots, Terms of Service and Privacy Policy, Google Play submission, Apple App Store submission
 
 ---
 
@@ -397,9 +337,9 @@ Each phase is a milestone. Each phase contains sub-tasks. Each sub-task must inc
 
 These are hard constraints for development. Do not deviate from these without explicit discussion and a new ADR.
 
-- Do not scaffold anything not listed in the current phase.
-- Complete the current phase before starting the next.
-- Every sub-task must include tests before it is considered complete.
+- Do not scaffold anything not listed in the current milestone.
+- Complete the current milestone before starting the next.
+- Every issue must include tests before it is considered complete.
 - Go tests use the table-driven pattern.
 - Always use environment variables for DB connections, API keys, and Clerk secrets. Never hardcode.
 - Postgres is the only server-side data store. Do not introduce other stores without discussion.

@@ -74,8 +74,8 @@ func TestMigrationRoundTrip(t *testing.T) {
 func TestSchemaConstraints(t *testing.T) {
 	// Common setup SQL fragments reused across test cases
 	const (
-		insertRole      = `INSERT INTO roles (name) VALUES ('test_role') ON CONFLICT DO NOTHING;`
-		insertUser      = `INSERT INTO users (clerk_id, role_id, email, display_name) VALUES ('clerk_test_1', (SELECT id FROM roles WHERE name = 'test_role'), 'test@example.com', 'Test User');`
+		insertRole      = `INSERT INTO user_roles (name) VALUES ('test_role') ON CONFLICT DO NOTHING;`
+		insertUser      = `INSERT INTO users (clerk_id, role_id, email, display_name) VALUES ('clerk_test_1', (SELECT id FROM user_roles WHERE name = 'test_role'), 'test@example.com', 'Test User');`
 		insertCategory  = `INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant') ON CONFLICT DO NOTHING;`
 		insertBusiness  = `INSERT INTO businesses (category_id, name, slug, address, latitude, longitude) VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Test Biz', 'test-biz', '123 Main St', 48.37, -123.73);`
 		insertEventType = `INSERT INTO event_types (name, slug) VALUES ('Live Music', 'live-music') ON CONFLICT DO NOTHING;`
@@ -103,8 +103,8 @@ func TestSchemaConstraints(t *testing.T) {
 		},
 		{
 			name:    "email uniqueness on users",
-			setup:   insertRole + `INSERT INTO users (clerk_id, role_id, email, display_name) VALUES ('clerk_dup_1', (SELECT id FROM roles WHERE name = 'test_role'), 'dup@example.com', 'User One');`,
-			query:   `INSERT INTO users (clerk_id, role_id, email, display_name) VALUES ('clerk_dup_2', (SELECT id FROM roles WHERE name = 'test_role'), 'dup@example.com', 'User Two');`,
+			setup:   insertRole + `INSERT INTO users (clerk_id, role_id, email, display_name) VALUES ('clerk_dup_1', (SELECT id FROM user_roles WHERE name = 'test_role'), 'dup@example.com', 'User One');`,
+			query:   `INSERT INTO users (clerk_id, role_id, email, display_name) VALUES ('clerk_dup_2', (SELECT id FROM user_roles WHERE name = 'test_role'), 'dup@example.com', 'User Two');`,
 			wantErr: true,
 		},
 		{

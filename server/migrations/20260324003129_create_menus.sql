@@ -6,7 +6,8 @@ CREATE TABLE menus (
   name TEXT NOT NULL, -- lunch menu, breakfast menu, etc
   description TEXT, -- maybe dave's breakfast menu has a description that says "the best breakfast in town"
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW (),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW ()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW (),
+  UNIQUE (business_id, name)
 );
 
 -- +goose StatementEnd

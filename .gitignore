@@ -3,6 +3,8 @@
 
 # Go Binaries
 /server/bin/
+/server/api
+/server/seed
 
 # NONE OF YOUR BUSINESS
 .env

@@ -3,7 +3,7 @@
 CREATE TABLE users (
   id BIGSERIAL PRIMARY KEY,
   clerk_id TEXT NOT NULL UNIQUE,
-  role_id BIGINT NOT NULL references roles (id),
+  role_id BIGINT NOT NULL references user_roles (id),
   email TEXT NOT NULL UNIQUE,
   display_name TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW (),

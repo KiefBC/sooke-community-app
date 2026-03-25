@@ -25,6 +25,12 @@ func main() {
 		port = "8080"
 	}
 
+	migrationPath := os.Getenv("MIGRATION_PATH")
+	if migrationPath == "" {
+		// Default assumes running from the server/ directory (e.g. cd server && go run ./cmd/api)
+		migrationPath = "./migrations"
+	}
+
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		log.Fatal("DATABASE_URL environment variable is required")
@@ -38,6 +44,12 @@ func main() {
 
 	log.Println("Database connection established...")
 
+	if err := database.Migrate(db, migrationPath); err != nil {
+		log.Fatalf("Failed to run database migrations: %v", err)
+	}
+
+	log.Printf("Database migrations completed")
+
 	r := router.New(db)
 
 	srv := &http.Server{
@@ -50,7 +62,7 @@ func main() {
 	}
 
 	log.Printf("Starting server on port %s...", port)
-	log.Printf("Server: http://127.0.0.1:8080/")
+	log.Printf("Server: http://127.0.0.1:%s/", port)
 
 	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed to start: %v", err)

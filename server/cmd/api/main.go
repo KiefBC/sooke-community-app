@@ -25,10 +25,10 @@ func main() {
 		port = "8080"
 	}
 
-	migration_path := os.Getenv("MIGRATION_PATH")
-	if migration_path == "" {
+	migrationPath := os.Getenv("MIGRATION_PATH")
+	if migrationPath == "" {
 		// Hardcoding this path is not ideal, but it makes it easier to run the server without having to set the MIGRATION_PATH variable every time
-		migration_path = "./migrations"
+		migrationPath = "./migrations"
 	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
@@ -44,7 +44,7 @@ func main() {
 
 	log.Println("Database connection established...")
 
-	if err := database.Migrate(db, migration_path); err != nil {
+	if err := database.Migrate(db, migrationPath); err != nil {
 		log.Fatalf("Failed to run database migrations: %v", err)
 	}
 
@@ -62,7 +62,7 @@ func main() {
 	}
 
 	log.Printf("Starting server on port %s...", port)
-	log.Printf("Server: http://127.0.0.1:8080/")
+	log.Printf("Server: http://127.0.0.1:%s/", port)
 
 	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed to start: %v", err)

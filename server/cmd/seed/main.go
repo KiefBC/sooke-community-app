@@ -49,7 +49,9 @@ func seed(db *sql.DB) error {
 	}
 
 	for _, role := range seedUserRoles {
-		db.Exec("INSERT INTO user_roles (name) VALUES ($1)", role.name)
+		if _, err := db.Exec("INSERT INTO user_roles (name) VALUES ($1)", role.name); err != nil {
+			return fmt.Errorf("failed to seed role %q: %w", role.name, err)
+		}
 	}
 
 	var seedUsers = []struct {
@@ -64,10 +66,12 @@ func seed(db *sql.DB) error {
 	}
 
 	for _, u := range seedUsers {
-		db.Exec(
+		if _, err := db.Exec(
 			"INSERT INTO users (clerk_id, role_id, email, display_name) VALUES ($1, (SELECT id FROM user_roles WHERE name = $2), $3, $4)",
 			u.ClerkID, u.Role, u.Email, u.DisplayName,
-		)
+		); err != nil {
+			return fmt.Errorf("failed to seed user %q: %w", u.Email, err)
+		}
 	}
 
 	var seedBusinessCat = []struct {
@@ -85,10 +89,15 @@ func seed(db *sql.DB) error {
 		{
 			"Outdoor Recreation",
 		},
+		{
+			"Community",
+		},
 	}
 
 	for _, cat := range seedBusinessCat {
-		db.Exec("INSERT INTO business_categories (name, slug) VALUES ($1, $2)", cat.name, slug.GenerateSlug(cat.name))
+		if _, err := db.Exec("INSERT INTO business_categories (name, slug) VALUES ($1, $2)", cat.name, slug.GenerateSlug(cat.name)); err != nil {
+			return fmt.Errorf("failed to seed business category %q: %w", cat.name, err)
+		}
 	}
 
 	var seedEventType = []struct {
@@ -106,7 +115,9 @@ func seed(db *sql.DB) error {
 	}
 
 	for _, et := range seedEventType {
-		db.Exec("INSERT INTO event_types (name, slug) VALUES ($1, $2)", et.name, slug.GenerateSlug(et.name))
+		if _, err := db.Exec("INSERT INTO event_types (name, slug) VALUES ($1, $2)", et.name, slug.GenerateSlug(et.name)); err != nil {
+			return fmt.Errorf("failed to seed event type %q: %w", et.name, err)
+		}
 	}
 
 	var seedBusinesses = []struct {
@@ -125,7 +136,7 @@ func seed(db *sql.DB) error {
 		{"Mom's Cafe", "Family-friendly breakfast and lunch spot loved by locals", "2036 Shields Rd", 48.377112314153386, -123.7254915288472, "Cafe", 2, "222-222-2222", "hello@momscafe.dev", "https://momscafe.dev"},
 		{"Sooke Landing Marina", "Full-service marina with boat rentals and moorage", "6585 Goodmere Rd", 48.37801614501773, -123.71648471022064, "Outdoor Recreation", 3, "333-333-3333", "dock@sookemarina.dev", "https://sookemarina.dev"},
 		{"King Tide Fishing Charters", "Guided salmon and halibut fishing on the Strait of Juan de Fuca", "6969 Sea Lion Way", 48.35785881994283, -123.72657954591688, "Outdoor Recreation", 0, "", "", ""},
-		{"Sooke Community Hall", "Local gathering space for markets, meetings, and events", "2037 Shields Rd", 48.37759971334821, -123.72517166628057, "Community Meeting", 0, "", "", ""},
+		{"Sooke Community Hall", "Local gathering space for markets, meetings, and events", "2037 Shields Rd", 48.37759971334821, -123.72517166628057, "Community", 0, "", "", ""},
 		{"The Stick In The Mud's Roastoreum", "Small-batch coffee roaster and cozy neighbourhood cafe", "6711 Eustace Rd", 48.37789738050146, -123.7245055441908, "Cafe", 0, "", "", ""},
 	}
 
@@ -134,11 +145,13 @@ func seed(db *sql.DB) error {
 		if biz.OwnerID > 0 {
 			ownerID = biz.OwnerID
 		}
-		db.Exec(
+		if _, err := db.Exec(
 			`INSERT INTO businesses (owner_id, category_id, name, slug, description, phone, email, website, address, latitude, longitude)
 			 VALUES ($1, (SELECT id FROM business_categories WHERE name = $2), $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 			ownerID, biz.Category, biz.Name, slug.GenerateSlug(biz.Name), biz.Description, biz.Phone, biz.Email, biz.Website, biz.Address, biz.Lat, biz.Lng,
-		)
+		); err != nil {
+			return fmt.Errorf("failed to seed business %q: %w", biz.Name, err)
+		}
 	}
 
 	var seedBusinessHours = []struct {
@@ -204,11 +217,13 @@ func seed(db *sql.DB) error {
 	}
 
 	for _, bh := range seedBusinessHours {
-		db.Exec(
+		if _, err := db.Exec(
 			`INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
 			 VALUES ((SELECT id FROM businesses WHERE name = $1), $2, $3, $4, $5)`,
 			bh.Business, bh.DayOfWeek, bh.OpenTime, bh.CloseTime, bh.IsClosed,
-		)
+		); err != nil {
+			return fmt.Errorf("failed to seed business hours for %q day %d: %w", bh.Business, bh.DayOfWeek, err)
+		}
 	}
 
 	var seedMenus = []struct {
@@ -276,10 +291,12 @@ func seed(db *sql.DB) error {
 		}
 
 		for _, item := range menu.Items {
-			db.Exec(
+			if _, err := db.Exec(
 				"INSERT INTO menu_items (menu_id, name, description, price) VALUES ($1, $2, $3, $4)",
 				menuID, item.Name, item.Description, item.Price,
-			)
+			); err != nil {
+				return fmt.Errorf("failed to seed menu item %q: %w", item.Name, err)
+			}
 		}
 	}
 
@@ -301,7 +318,7 @@ func seed(db *sql.DB) error {
 		if event.EndTime != "" {
 			endTime = event.EndTime
 		}
-		db.Exec(
+		if _, err := db.Exec(
 			`INSERT INTO events (event_type_id, submitted_by, business_id, name, slug, description, starts_at, ends_at, status)
 			 VALUES (
 			   (SELECT id FROM event_types WHERE name = $1),
@@ -311,7 +328,9 @@ func seed(db *sql.DB) error {
 			 )`,
 			event.EventType, event.Business, event.Name, slug.GenerateSlug(event.Name),
 			event.Description, event.StartTime, endTime, event.Status,
-		)
+		); err != nil {
+			return fmt.Errorf("failed to seed event %q: %w", event.Name, err)
+		}
 	}
 
 	return nil

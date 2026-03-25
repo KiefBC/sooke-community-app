@@ -114,10 +114,10 @@ func TestSchemaConstraints(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "event location - neither business_id nor lat/lng set",
+			name:    "event location - neither business_id nor lat/lng set (allowed for orphaned events)",
 			setup:   insertRole + insertUser + insertCategory + insertBusiness + insertEventType,
 			query:   `INSERT INTO events (event_type_id, submitted_by, name, slug, starts_at) VALUES ((SELECT id FROM event_types WHERE slug = 'live-music'), (SELECT id FROM users WHERE email = 'test@example.com'), 'Bad Event', 'bad-event-neither', NOW());`,
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name:    "event location - business_id only succeeds",
@@ -148,12 +148,12 @@ func TestSchemaConstraints(t *testing.T) {
 			checkIs: 0,
 		},
 		{
-			name:    "CASCADE business deletes events",
-			setup:   insertRole + insertUser + insertCategory + insertBusiness + insertEventType + `INSERT INTO events (event_type_id, submitted_by, business_id, name, slug, starts_at) VALUES ((SELECT id FROM event_types WHERE slug = 'live-music'), (SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM businesses WHERE slug = 'test-biz'), 'Cascaded Event', 'cascaded-event', NOW());`,
+			name:    "SET NULL on business delete preserves events",
+			setup:   insertRole + insertUser + insertCategory + insertBusiness + insertEventType + `INSERT INTO events (event_type_id, submitted_by, business_id, name, slug, starts_at) VALUES ((SELECT id FROM event_types WHERE slug = 'live-music'), (SELECT id FROM users WHERE email = 'test@example.com'), (SELECT id FROM businesses WHERE slug = 'test-biz'), 'Orphaned Event', 'orphaned-event', NOW());`,
 			query:   `DELETE FROM businesses WHERE slug = 'test-biz';`,
 			wantErr: false,
-			check:   `SELECT COUNT(*) FROM events WHERE slug = 'cascaded-event';`,
-			checkIs: 0,
+			check:   `SELECT COUNT(*) FROM events WHERE slug = 'orphaned-event' AND business_id IS NULL;`,
+			checkIs: 1,
 		},
 	}
 

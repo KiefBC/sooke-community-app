@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// PaginatedResponse represents the structure of a paginated response, containing a list of items and pagination information.
+// PaginatedResponse represents the structure of a paginated response, containing a list of items and pagination information. It is a generic type that can be used for any type of items.
 type PaginatedResponse[T any] struct {
 	Items      []T        `json:"items"`
 	Pagination Pagination `json:"pagination"`

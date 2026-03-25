@@ -36,16 +36,13 @@ func TestMain(m *testing.M) {
 		migrationsPath = "../../../server/migrations"
 	}
 
-	// Apply migrations first so the goose tracking table exists,
-	// then reset and reapply for a clean schema
+	// Drop all tables (including goose tracking) for a guaranteed clean state.
+	// This avoids "missing migrations" errors when migration files are renamed.
+	if _, err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
+		panic("failed to reset schema: " + err.Error())
+	}
 	if err := goose.Up(db, migrationsPath); err != nil {
 		panic("failed to apply migrations: " + err.Error())
-	}
-	if err := goose.Reset(db, migrationsPath); err != nil {
-		panic("failed to reset migrations: " + err.Error())
-	}
-	if err := goose.Up(db, migrationsPath); err != nil {
-		panic("failed to reapply migrations: " + err.Error())
 	}
 
 	testDB = db

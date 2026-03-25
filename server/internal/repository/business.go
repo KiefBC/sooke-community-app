@@ -6,8 +6,12 @@ import (
 	"fmt"
 )
 
-// Why are we using pointers for nullable fields?
-// We use pointers for nullable fields in the Business struct to allow us to represent the absence of a value (i.e., null) in the database.
+// Querier is the shared interface between *sql.DB and *sql.Tx.
+type Querier interface {
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
 
 // Business represents a business entity in the database.
 type Business struct {
@@ -27,9 +31,9 @@ type Business struct {
 
 // BusinessDetails represents a business along with its hours and menus.
 type BusinessDetails struct {
-	Business                // Embed the Business struct to include its fields
-	Hours    []BusinessHour `json:"hours"`
-	Menus    []Menu         `json:"menus"`
+	Business
+	Hours []BusinessHour `json:"hours"`
+	Menus []Menu         `json:"menus"`
 }
 
 // BusinessHour represents the operating hours for a business on a specific day of the week.
@@ -53,14 +57,14 @@ type MenuItem struct {
 	ID          int64   `json:"id"`
 	Name        string  `json:"name"`
 	Description *string `json:"description"` // nullable
-	// Why use a string for the Price field in MenuItem instead of a numeric type?
 	// The database stores price as NUMERIC(10,2). The pgx driver returns this as a string (`"12.99"`). Converting to `float64` introduces rounding
 	Price string `json:"price"`
 }
 
-func ListBusinesses(ctx context.Context, db *sql.DB, search, category_slug string, limit, offset int) ([]Business, int, error) {
+// ListBusinesses retrieves a list of businesses from the database based on the provided search and category filters, along with pagination parameters. It returns the list of businesses, the total count of matching businesses (ignoring pagination), and any error encountered during the operation.
+func ListBusinesses(ctx context.Context, q Querier, search, category_slug string, limit, offset int) ([]Business, int, error) {
 	var countTotal int
-	err := db.QueryRowContext(ctx,
+	err := q.QueryRowContext(ctx,
 		`SELECT COUNT(*)
 		 FROM businesses b
 		 JOIN business_categories bc ON b.category_id = bc.id
@@ -73,7 +77,7 @@ func ListBusinesses(ctx context.Context, db *sql.DB, search, category_slug strin
 	}
 
 	// The $1 = '' trick prevents dynamic sql injections with string concatentation. The OR short-circuits to always true
-	rows, err := db.QueryContext(ctx,
+	rows, err := q.QueryContext(ctx,
 		`SELECT b.id, b.name, b.slug, b.description, bc.name AS category_name, bc.slug AS category_slug, b.address, b.latitude, b.longitude, b.phone, b.email, b.website
 			 FROM businesses b
 		JOIN business_categories bc ON b.category_id = bc.id
@@ -88,7 +92,7 @@ func ListBusinesses(ctx context.Context, db *sql.DB, search, category_slug strin
 	}
 	defer rows.Close()
 
-	businesses := []Business{} // Initialize an empty slice to hold the results and costs less memory than preallocating with a large capacity
+	businesses := []Business{}
 	for rows.Next() {
 		var b Business
 		err := rows.Scan(&b.ID, &b.Name, &b.Slug, &b.Description, &b.CategoryName, &b.CategorySlug, &b.Address, &b.Latitude, &b.Longitude, &b.Phone, &b.Email, &b.Website)
@@ -104,9 +108,10 @@ func ListBusinesses(ctx context.Context, db *sql.DB, search, category_slug strin
 	return businesses, countTotal, nil
 }
 
-func GetBusinessBySlug(ctx context.Context, db *sql.DB, slug string) (*BusinessDetails, error) {
+// GetBusinessBySlug retrieves a business from the database based on its slug, along with its operating hours and associated menus. It returns a BusinessDetails struct containing all the relevant information, or nil if no business is found with the given slug. Any error encountered during the operation is also returned.
+func GetBusinessBySlug(ctx context.Context, q Querier, slug string) (*BusinessDetails, error) {
 	var bd BusinessDetails
-	err := db.QueryRowContext(ctx,
+	err := q.QueryRowContext(ctx,
 		`SELECT b.id, b.name, b.slug, b.description, bc.name AS category_name, bc.slug AS category_slug, b.address, b.latitude, b.longitude, b.phone, b.email, b.website
 		 FROM businesses b
 		 JOIN business_categories bc ON b.category_id = bc.id
@@ -120,7 +125,7 @@ func GetBusinessBySlug(ctx context.Context, db *sql.DB, slug string) (*BusinessD
 		return nil, fmt.Errorf("failed to query business: %w", err)
 	}
 
-	hoursRows, err := db.QueryContext(ctx,
+	hoursRows, err := q.QueryContext(ctx,
 		`SELECT day_of_week, open_time, close_time, is_closed
 		 FROM business_hours
 		 WHERE business_id = $1
@@ -144,7 +149,10 @@ func GetBusinessBySlug(ctx context.Context, db *sql.DB, slug string) (*BusinessD
 		return nil, fmt.Errorf("error iterating over business hours rows: %w", err)
 	}
 
-	menuRows, err := db.QueryContext(ctx,
+	// Collect all menus first, then close menuRows before querying items.
+	// A *sql.Tx uses a single connection, so you can't have two active
+	// result sets open at the same time (pgx returns "bad connection").
+	menuRows, err := q.QueryContext(ctx,
 		`SELECT id, name, description
 		 FROM menus
 		 WHERE business_id = $1`,
@@ -153,21 +161,30 @@ func GetBusinessBySlug(ctx context.Context, db *sql.DB, slug string) (*BusinessD
 	if err != nil {
 		return nil, fmt.Errorf("failed to query menus: %w", err)
 	}
-	defer menuRows.Close()
 
 	for menuRows.Next() {
 		var m Menu
 		err := menuRows.Scan(&m.ID, &m.Name, &m.Description)
 		if err != nil {
+			menuRows.Close()
 			return nil, fmt.Errorf("failed to scan menu: %w", err)
 		}
+		bd.Menus = append(bd.Menus, m)
+	}
+	if err := menuRows.Err(); err != nil {
+		menuRows.Close()
+		return nil, fmt.Errorf("error iterating over menus rows: %w", err)
+	}
+	menuRows.Close()
 
-		itemRows, err := db.QueryContext(ctx,
+	// Now query items for each menu with no other result set open
+	for i := range bd.Menus {
+		itemRows, err := q.QueryContext(ctx,
 			`SELECT id, name, description, price
 			 FROM menu_items
-			 WHERE menu_id = ANY($1)
+			 WHERE menu_id = $1
 			 ORDER BY name ASC`,
-			m.ID,
+			bd.Menus[i].ID,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query menu items: %w", err)
@@ -177,18 +194,16 @@ func GetBusinessBySlug(ctx context.Context, db *sql.DB, slug string) (*BusinessD
 			var mi MenuItem
 			err := itemRows.Scan(&mi.ID, &mi.Name, &mi.Description, &mi.Price)
 			if err != nil {
+				itemRows.Close()
 				return nil, fmt.Errorf("failed to scan menu item: %w", err)
 			}
-			m.Items = append(m.Items, mi)
+			bd.Menus[i].Items = append(bd.Menus[i].Items, mi)
 		}
 		if err := itemRows.Err(); err != nil {
+			itemRows.Close()
 			return nil, fmt.Errorf("error iterating over menu items rows: %w", err)
 		}
-		bd.Menus = append(bd.Menus, m)
-		itemRows.Close() // Close the item rows before the next iteration to prevent too many open connections
-	}
-	if err := menuRows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating over menus rows: %w", err)
+		itemRows.Close()
 	}
 
 	return &bd, nil

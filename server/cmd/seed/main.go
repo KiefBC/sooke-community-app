@@ -223,9 +223,9 @@ func seed(db *sql.DB) error {
 	for _, bh := range seedBusinessHours {
 		if _, err := db.Exec(
 			`INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
-			 VALUES ((SELECT id FROM businesses WHERE name = $1), $2, $3, $4, $5)
+			 VALUES ((SELECT id FROM businesses WHERE slug = $1), $2, $3, $4, $5)
 			 ON CONFLICT (business_id, day_of_week) DO UPDATE SET open_time = $3, close_time = $4, is_closed = $5`,
-			bh.Business, bh.DayOfWeek, bh.OpenTime, bh.CloseTime, bh.IsClosed,
+			slug.GenerateSlug(bh.Business), bh.DayOfWeek, bh.OpenTime, bh.CloseTime, bh.IsClosed,
 		); err != nil {
 			return fmt.Errorf("failed to seed business hours for %q day %d: %w", bh.Business, bh.DayOfWeek, err)
 		}
@@ -283,10 +283,10 @@ func seed(db *sql.DB) error {
 		var menuID int64
 		err := db.QueryRow(
 			`INSERT INTO menus (business_id, name, description)
-			 VALUES ((SELECT id FROM businesses WHERE name = $1), $2, $3)
+			 VALUES ((SELECT id FROM businesses WHERE slug = $1), $2, $3)
 			 ON CONFLICT (business_id, name) DO NOTHING
 			 RETURNING id`,
-			menu.Business, menu.Name, menu.Description,
+			slug.GenerateSlug(menu.Business), menu.Name, menu.Description,
 		).Scan(&menuID)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -328,11 +328,11 @@ func seed(db *sql.DB) error {
 			 VALUES (
 			   (SELECT id FROM event_types WHERE name = $1),
 			   (SELECT id FROM users WHERE clerk_id = 'seed_super_admin'),
-			   (SELECT id FROM businesses WHERE name = $2),
+			   (SELECT id FROM businesses WHERE slug = $2),
 			   $3, $4, $5, $6, $7, $8
 			 )
 			 ON CONFLICT (slug) DO UPDATE SET description = $5, starts_at = $6, ends_at = $7, status = $8`,
-			event.EventType, event.Business, event.Name, slug.GenerateSlug(event.Name),
+			event.EventType, slug.GenerateSlug(event.Business), event.Name, slug.GenerateSlug(event.Name),
 			event.Description, event.StartTime, endTime, event.Status,
 		); err != nil {
 			return fmt.Errorf("failed to seed event %q: %w", event.Name, err)

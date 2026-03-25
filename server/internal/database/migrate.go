@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -17,15 +18,26 @@ func Migrate(db *sql.DB, migrationsPath string) error {
 		return fmt.Errorf("failed to set goose dialect: %w", err)
 	}
 
-	// Acquire a session-level advisory lock so only one instance migrates at a time.
-	// pg_advisory_lock blocks until the lock is available.
+	ctx := context.Background()
+
+	// Pin advisory lock to a single connection so lock and unlock
+	// execute on the same Postgres session.
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to acquire dedicated connection: %w", err)
+	}
+	defer conn.Close()
+
 	log.Println("Acquiring migration advisory lock...")
-	if _, err := db.Exec("SELECT pg_advisory_lock($1)", migrationLockID); err != nil {
+	if _, err := conn.ExecContext(ctx, "SELECT pg_advisory_lock($1)", migrationLockID); err != nil {
 		return fmt.Errorf("failed to acquire migration advisory lock: %w", err)
 	}
 	defer func() {
-		if _, err := db.Exec("SELECT pg_advisory_unlock($1)", migrationLockID); err != nil {
+		var unlocked bool
+		if err := conn.QueryRowContext(ctx, "SELECT pg_advisory_unlock($1)", migrationLockID).Scan(&unlocked); err != nil {
 			log.Printf("Warning: failed to release migration advisory lock: %v", err)
+		} else if !unlocked {
+			log.Printf("Warning: pg_advisory_unlock returned false -- lock was not held")
 		}
 	}()
 

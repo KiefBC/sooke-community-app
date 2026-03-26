@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	github.com/go-chi/cors v1.2.2 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

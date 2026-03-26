@@ -86,7 +86,5 @@ curl http://localhost:8080/api/v1/health
 ```bash
 cd starlight-docs
 npm install
-npm run dev       # local dev server
-npm run build     # production build
-npm run preview   # preview production build
+npm run preview
 ```

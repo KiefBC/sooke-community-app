@@ -88,19 +88,30 @@ This will produce an executable binary at `server/bin/api` that can be run on th
 
 ```bash
 cd server
-go test ./...
+go test ./... -p 1
 ```
 
-This runs all unit tests. Integration tests that require a database are skipped when `TEST_DATABASE_URL` is not set.
+This runs all unit tests. The `-p 1` flag runs test packages serially -- this is required because multiple packages (`database`, `repository`) share a single test database and reset its schema in `TestMain`. Without `-p 1`, concurrent schema drops cause race conditions.
+
+Integration tests that require a database are skipped when `TEST_DATABASE_URL` is not set.
 
 ### Run tests with database (integration)
 
 ```bash
 cd server
-TEST_DATABASE_URL="<your_test_database_url>" go test ./...
+TEST_DATABASE_URL="<your_test_database_url>" go test ./... -p 1
 ```
 
 This runs the full test suite including integration tests that verify database connectivity.
+
+### Run tests for a single package
+
+```bash
+cd server
+go test ./internal/repository/... -v
+```
+
+When running a single package, `-p 1` is not needed. Use `-v` for verbose output showing individual test case names.
 
 ---
 

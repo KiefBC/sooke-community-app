@@ -6,50 +6,18 @@ import (
 	"os"
 	"testing"
 
-	"github.com/joho/godotenv"
-	"github.com/kiefbc/sooke_app/server/internal/database"
 	"github.com/kiefbc/sooke_app/server/internal/repository"
-	"github.com/pressly/goose/v3"
+	"github.com/kiefbc/sooke_app/server/internal/testdb"
 )
 
 var testDB *sql.DB
 
 func TestMain(m *testing.M) {
-	_ = godotenv.Load("../../../.env")
-
-	url := os.Getenv("TEST_DATABASE_URL")
-	if url == "" {
+	testDB = testdb.Open()
+	if testDB == nil {
 		os.Exit(0)
 	}
-
-	db, err := database.Connect(url)
-	if err != nil {
-		panic("failed to connect to test database: " + err.Error())
-	}
-
-	if err := goose.SetDialect("postgres"); err != nil {
-		panic("failed to set goose dialect: " + err.Error())
-	}
-
-	migrationsPath := os.Getenv("TEST_MIGRATION_PATH")
-	if migrationsPath == "" {
-		migrationsPath = "../../../server/migrations"
-	}
-
-	// Drop all tables (including goose tracking) for a guaranteed clean state.
-	if _, err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
-		panic("failed to reset schema: " + err.Error())
-	}
-	if err := goose.Up(db, migrationsPath); err != nil {
-		panic("failed to apply migrations: " + err.Error())
-	}
-
-	testDB = db
-
-	code := m.Run()
-
-	db.Close()
-	os.Exit(code)
+	os.Exit(m.Run())
 }
 
 func TestGetBusinessBySlug(t *testing.T) {

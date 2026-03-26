@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"database/sql"
 	"math"
 	"net/http"
 	"strconv"
@@ -12,7 +11,7 @@ import (
 	"github.com/kiefbc/sooke_app/server/internal/repository"
 )
 
-func GetBusinessHandler(db *sql.DB) http.HandlerFunc {
+func GetBusinessHandler(db repository.Querier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
@@ -33,7 +32,7 @@ func GetBusinessHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func ListBusinessesHandler(db *sql.DB) http.HandlerFunc {
+func ListBusinessesHandler(db repository.Querier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()

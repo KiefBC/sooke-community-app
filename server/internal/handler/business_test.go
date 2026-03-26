@@ -9,69 +9,34 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
-	"github.com/kiefbc/sooke_app/server/internal/database"
 	"github.com/kiefbc/sooke_app/server/internal/handler"
 	"github.com/kiefbc/sooke_app/server/internal/repository"
-	"github.com/pressly/goose/v3"
+	"github.com/kiefbc/sooke_app/server/internal/testdb"
 )
 
 var testDB *sql.DB
 
 func TestMain(m *testing.M) {
-	_ = godotenv.Load("../../../.env")
-
-	url := os.Getenv("TEST_DATABASE_URL")
-	if url == "" {
+	testDB = testdb.Open()
+	if testDB == nil {
 		os.Exit(0)
 	}
-
-	db, err := database.Connect(url)
-	if err != nil {
-		panic("failed to connect to test database: " + err.Error())
-	}
-
-	if err := goose.SetDialect("postgres"); err != nil {
-		panic("failed to set goose dialect: " + err.Error())
-	}
-
-	migrationsPath := os.Getenv("TEST_MIGRATION_PATH")
-	if migrationsPath == "" {
-		migrationsPath = "../../../server/migrations"
-	}
-
-	if _, err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
-		panic("failed to reset schema: " + err.Error())
-	}
-	if err := goose.Up(db, migrationsPath); err != nil {
-		panic("failed to apply migrations: " + err.Error())
-	}
-
-	// Seed test data for handler tests
-	_, err = db.Exec(`
-		INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant'), ('Cafe', 'cafe') ON CONFLICT DO NOTHING;
-		INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-			VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Sooke Harbour House', 'sooke-harbour-house', '1528 Whiffen Spit Rd', 48.3538, -123.7256);
-		INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-			VALUES ((SELECT id FROM business_categories WHERE slug = 'cafe'), 'Moms Cafe', 'moms-cafe', '2036 Shields Rd', 48.3761, -123.7254);
-		INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
-			VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 1, '09:00', '17:00', false);
-		INSERT INTO menus (business_id, name) VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 'Dinner');
-		INSERT INTO menu_items (menu_id, name, price) VALUES ((SELECT id FROM menus WHERE name = 'Dinner'), 'Fish and Chips', '12.99');
-	`)
-	if err != nil {
-		panic("failed to seed test data: " + err.Error())
-	}
-
-	testDB = db
-	code := m.Run()
-	db.Close()
-	os.Exit(code)
+	os.Exit(m.Run())
 }
 
-func TestListBusinesses(t *testing.T) {
-	h := handler.ListBusinessesHandler(testDB)
+const businessSeed = `
+	INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant'), ('Cafe', 'cafe') ON CONFLICT DO NOTHING;
+	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Sooke Harbour House', 'sooke-harbour-house', '1528 Whiffen Spit Rd', 48.3538, -123.7256);
+	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+		VALUES ((SELECT id FROM business_categories WHERE slug = 'cafe'), 'Moms Cafe', 'moms-cafe', '2036 Shields Rd', 48.3761, -123.7254);
+	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
+		VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 1, '09:00', '17:00', false);
+	INSERT INTO menus (business_id, name) VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 'Dinner');
+	INSERT INTO menu_items (menu_id, name, price) VALUES ((SELECT id FROM menus WHERE name = 'Dinner'), 'Fish and Chips', '12.99');
+`
 
+func TestListBusinesses(t *testing.T) {
 	tests := []struct {
 		name           string
 		url            string
@@ -104,6 +69,17 @@ func TestListBusinesses(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tx, err := testDB.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin transaction: %v", err)
+			}
+			defer tx.Rollback()
+
+			if _, err := tx.Exec(businessSeed); err != nil {
+				t.Fatalf("seed failed: %v", err)
+			}
+
+			h := handler.ListBusinessesHandler(tx)
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			rec := httptest.NewRecorder()
 			h(rec, req)
@@ -125,14 +101,12 @@ func TestListBusinesses(t *testing.T) {
 				t.Errorf("got %d items, want at least %d", len(body.Items), tt.wantMinItems)
 			}
 
-			// Contract: required fields are never empty
 			for _, b := range body.Items {
 				if b.Name == "" || b.Slug == "" || b.Address == "" {
 					t.Errorf("required fields missing: name=%q slug=%q address=%q", b.Name, b.Slug, b.Address)
 				}
 			}
 
-			// Contract: pagination object has all four fields populated
 			if body.Pagination.Page < 1 {
 				t.Errorf("pagination.page = %d, want >= 1", body.Pagination.Page)
 			}
@@ -150,8 +124,6 @@ func TestListBusinesses(t *testing.T) {
 }
 
 func TestGetBusiness(t *testing.T) {
-	h := handler.GetBusinessHandler(testDB)
-
 	tests := []struct {
 		name         string
 		slug         string
@@ -179,7 +151,18 @@ func TestGetBusiness(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// chi.URLParam requires the request to go through a Chi router
+			tx, err := testDB.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin transaction: %v", err)
+			}
+			defer tx.Rollback()
+
+			if _, err := tx.Exec(businessSeed); err != nil {
+				t.Fatalf("seed failed: %v", err)
+			}
+
+			h := handler.GetBusinessHandler(tx)
+
 			r := chi.NewRouter()
 			r.Get("/businesses/{slug}", h)
 
@@ -195,7 +178,6 @@ func TestGetBusiness(t *testing.T) {
 				t.Errorf("Content-Type = %q, want application/json", ct)
 			}
 
-			// Error response path
 			if tt.wantErrCode != "" {
 				var body handler.ErrorResponse
 				if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
@@ -210,7 +192,6 @@ func TestGetBusiness(t *testing.T) {
 				return
 			}
 
-			// Success response path
 			var body repository.BusinessDetails
 			if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
 				t.Fatalf("failed to decode response: %v", err)
@@ -236,7 +217,9 @@ func TestGetBusiness(t *testing.T) {
 }
 
 func TestGetCategories(t *testing.T) {
-	h := handler.ListCategoriesHandler(testDB)
+	const categorySeed = `
+		INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant'), ('Cafe', 'cafe') ON CONFLICT DO NOTHING;
+	`
 
 	tests := []struct {
 		name            string
@@ -254,6 +237,17 @@ func TestGetCategories(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tx, err := testDB.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin transaction: %v", err)
+			}
+			defer tx.Rollback()
+
+			if _, err := tx.Exec(categorySeed); err != nil {
+				t.Fatalf("seed failed: %v", err)
+			}
+
+			h := handler.ListCategoriesHandler(tx)
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/categories", nil)
 			rec := httptest.NewRecorder()
 			h(rec, req)
@@ -277,7 +271,6 @@ func TestGetCategories(t *testing.T) {
 				t.Fatalf("got %d categories, want at least %d", len(body.Items), tt.wantMinItems)
 			}
 
-			// Verify alphabetical order
 			for i := 1; i < len(body.Items); i++ {
 				if body.Items[i].Name < body.Items[i-1].Name {
 					t.Errorf("categories not sorted: %q came after %q", body.Items[i].Name, body.Items[i-1].Name)

@@ -2,6 +2,8 @@ package router
 
 import (
 	"database/sql"
+	"os"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -14,10 +16,15 @@ import (
 func New(db *sql.DB) *chi.Mux {
 	r := chi.NewRouter()
 
+	origins := os.Getenv("CORS_ALLOWED_ORIGINS")
+	if origins == "" {
+		origins = "http://localhost:8080"
+	}
+
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:8080"},
+		AllowedOrigins:   strings.Split(origins, ","),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type"},
 		AllowCredentials: false,

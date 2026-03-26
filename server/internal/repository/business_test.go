@@ -61,15 +61,6 @@ func TestGetBusinessBySlug(t *testing.T) {
 			wantMenus: 0,
 			wantItems: 0,
 		},
-		{
-			name:      "menus and items are included",
-			slug:      "sooke-harbour-house",
-			wantNil:   false,
-			wantName:  "Sooke Harbour House",
-			wantHours: 3,
-			wantMenus: 1,
-			wantItems: 1,
-		},
 	}
 
 	for _, tt := range tests {

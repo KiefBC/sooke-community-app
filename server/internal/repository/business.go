@@ -62,7 +62,7 @@ type MenuItem struct {
 }
 
 // ListBusinesses retrieves a list of businesses from the database based on the provided search and category filters, along with pagination parameters. It returns the list of businesses, the total count of matching businesses (ignoring pagination), and any error encountered during the operation.
-func ListBusinesses(ctx context.Context, q Querier, search, category_slug string, limit, offset int) ([]Business, int, error) {
+func ListBusinesses(ctx context.Context, q Querier, search, categorySlug string, limit, offset int) ([]Business, int, error) {
 	var countTotal int
 	err := q.QueryRowContext(ctx,
 		`SELECT COUNT(*)
@@ -70,13 +70,13 @@ func ListBusinesses(ctx context.Context, q Querier, search, category_slug string
 		 JOIN business_categories bc ON b.category_id = bc.id
 		 WHERE ($1 = '' OR b.name ILIKE '%' || $1 || '%')
 			 AND ($2 = '' OR bc.slug = $2)`,
-		search, category_slug,
+		search, categorySlug,
 	).Scan(&countTotal)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count businesses: %w", err)
 	}
 
-	// The $1 = '' trick prevents dynamic sql injections with string concatentation. The OR short-circuits to always true
+	// The $1 = '' trick prevents dynamic sql with string concatentation. The OR short-circuits to always true
 	rows, err := q.QueryContext(ctx,
 		`SELECT b.id, b.name, b.slug, b.description, bc.name AS category_name, bc.slug AS category_slug, b.address, b.latitude, b.longitude, b.phone, b.email, b.website
 			 FROM businesses b
@@ -85,7 +85,7 @@ func ListBusinesses(ctx context.Context, q Querier, search, category_slug string
 			AND ($2 = '' OR bc.slug = $2)
 		ORDER BY b.name ASC
 		LIMIT $3 OFFSET $4`,
-		search, category_slug, limit, offset,
+		search, categorySlug, limit, offset,
 	)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to query businesses: %w", err)

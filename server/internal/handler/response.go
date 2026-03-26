@@ -39,6 +39,7 @@ func WriteJSON(w http.ResponseWriter, statusCode int, data any) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(data); err != nil {
 		WriteError(w, http.StatusInternalServerError, "internal_error", "Failed to encode response")
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -58,6 +59,7 @@ func WriteError(w http.ResponseWriter, statusCode int, code string, message stri
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(errorResponse); err != nil {
 		fmt.Printf("Failed to encode error response: %v", err)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

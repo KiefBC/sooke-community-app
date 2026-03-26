@@ -18,6 +18,9 @@ func New(db *sql.DB) *chi.Mux {
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/health", handler.HealthHandler(db))
+		r.Get("/businesses", handler.ListBusinessesHandler(db))
+		r.Get("/businesses/{slug}", handler.GetBusinessHandler(db))
+		r.Get("/categories", handler.ListCategoriesHandler(db))
 	})
 
 	return r

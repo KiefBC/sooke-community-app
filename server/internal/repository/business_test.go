@@ -103,7 +103,7 @@ func TestGetBusinessBySlug(t *testing.T) {
 			wantItems: 1,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tx, err := testDB.Begin()
@@ -121,7 +121,7 @@ func TestGetBusinessBySlug(t *testing.T) {
 				t.Fatalf("GetBusinessBySlug returned error: %v", err)
 			}
 
-			// if we expect nil, assert that business is nil and return early to avoid dereferencing nil in further assertions	
+			// if we expect nil, assert that business is nil and return early to avoid dereferencing nil in further assertions
 			if tt.wantNil {
 				if business != nil {
 					t.Errorf("got business %+v, want nil", business)
@@ -245,6 +245,15 @@ func TestListBusinesses(t *testing.T) {
 			limit:     1,
 			offset:    1,
 			wantCount: 1,
+			wantTotal: 2,
+		},
+		{
+			name:      "pagination with invalid offset returns no businesses",
+			search:    "",
+			category:  "",
+			limit:     20,
+			offset:    100,
+			wantCount: 0,
 			wantTotal: 2,
 		},
 	}

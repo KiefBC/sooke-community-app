@@ -1,5 +1,11 @@
 # Sooke Community App
 
+
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/e3fd61d2-1e96-4c01-b6fa-7f2cbdc18c5e" autoplay loop muted playsinline></video>
+</div>
+
+
 A mobile-first community app for Sooke, BC. Built with SvelteKit, Capacitor, Go, and PostgreSQL.
 
 ## Prerequisites

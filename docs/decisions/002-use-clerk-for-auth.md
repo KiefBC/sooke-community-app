@@ -7,7 +7,7 @@ We chose Clerk as the authentication provider for the Sooke Community App.
 
 ## Status
 
-Accepted
+Superseded by ADR-014
 
 ## Context
 

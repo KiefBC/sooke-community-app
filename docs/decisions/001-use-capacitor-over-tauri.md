@@ -7,7 +7,7 @@ We chose Capacitor + SvelteKit as the mobile framework instead of Tauri v2.
 
 ## Status
 
-Accepted
+Superseded by ADR-013
 
 ## Context
 

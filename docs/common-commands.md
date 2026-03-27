@@ -197,12 +197,32 @@ This inserts sample Sooke businesses, categories, and event types for developmen
 
 ---
 
+## iOS App
+
+Build the iOS app:
+
+```bash
+cd ios && xcodegen generate && cd ..
+xcodebuild -project ios/SookeCommunity.xcodeproj -scheme SookeCommunity -destination 'platform=iOS Simulator,name=iPhone 16' build
+```
+
+Run tests:
+
+```bash
+xcodebuild -project ios/SookeCommunity.xcodeproj -scheme SookeCommunityTests -destination 'platform=iOS Simulator,name=iPhone 16' test
+```
+
+Open in Xcode:
+
+```bash
+open ios/SookeCommunity.xcodeproj
+```
+
+---
+
 ## Sections to Add Later
 
 The following sections will be added as each tool or service is set up:
 
-- SvelteKit mobile app (run, test, build)
-- Capacitor (iOS build, Android build, sync)
 - Admin dashboard (run, test, build, deploy)
 - Cloudflare R2 (upload, configure)
-- Clerk (configure, test tokens)

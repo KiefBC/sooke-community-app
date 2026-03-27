@@ -7,27 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		03021EA16B108AC1A7FCF483 /* CategoryModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BC366681143CAA0D6045CFF /* CategoryModelTests.swift */; };
 		0DB0093A06E722AF441CA840 /* SookeCommunityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1ABBAD383AC408A93907F66 /* SookeCommunityTests.swift */; };
-		160A7266510249445F01CEA0 /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D97122E09019E7133E1349 /* Menu.swift */; };
 		2177B2B8B178E6CFCAC3D861 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 38910D3C0EA73F0CF645FDB7 /* Kingfisher */; };
-		30C9E52C95E692843594BD67 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B430EB703133A90DA21658 /* AppTab.swift */; };
 		72EF951794721A0EF0080AC4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BD3A8D8EAADD432067C6B34 /* ContentView.swift */; };
-		740F707853CA25C7C0DDC1D8 /* MapPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE9B2A30639FD437D5CD69E /* MapPlaceholderView.swift */; };
-		7F933FD44F8996CCED74870F /* EventsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 867BDB7C7AFA844188D896E5 /* EventsPlaceholderView.swift */; };
-		809A4D7727F5A61715F6FAFA /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 207ECCB379C696A8617953AB /* ThemeTests.swift */; };
-		8C86AA60A3831E804EE3CF34 /* BusinessModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D714BA933C58086BA00A51A6 /* BusinessModelTests.swift */; };
-		944B7206119EBC4FBD3ABE74 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68BE1E7916C050B8B5587B65 /* HomeView.swift */; };
-		A03A122068813D4051760E8D /* BusinessesPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E196B7C182765B74ABB88D0 /* BusinessesPlaceholderView.swift */; };
-		AA6F46D9608E4CA615450DA1 /* APIResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21168015A2EF968E7839D79F /* APIResponse.swift */; };
 		AAF9C261FC2E917AE47658F8 /* SookeCommunityApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4681AA17C1A45A4C4703FD4 /* SookeCommunityApp.swift */; };
-		D1F2FFC5E75D1EE15C5AF699 /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D842D93F6B8D6CBB457B862 /* Category.swift */; };
-		D8BC06A10838BC17EBB0EB2D /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17839B82759ABD54B046006E /* APIClientTests.swift */; };
-		DCAE10FCE68125FB9600A8AE /* SookeTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EDED53480F9511C91B48E0 /* SookeTheme.swift */; };
-		E98A15E9C2744746498E9B65 /* APIResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506CB64902465AC1BBC4C157 /* APIResponseTests.swift */; };
-		F605BBF17BB2171C3D0FF741 /* Business.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90156C90BFA00DBD3AA73F0 /* Business.swift */; };
-		FA84F4586B515FD394DFEF18 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B224F6EA9E8B317B1B050E84 /* APIClient.swift */; };
-		FCB00B1A9484BEEAEC926D2B /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98E31A671F907607E821B17 /* MockURLProtocol.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,27 +24,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		17839B82759ABD54B046006E /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
-		207ECCB379C696A8617953AB /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
-		21168015A2EF968E7839D79F /* APIResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponse.swift; sourceTree = "<group>"; };
-		2D842D93F6B8D6CBB457B862 /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
-		3FE9B2A30639FD437D5CD69E /* MapPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapPlaceholderView.swift; sourceTree = "<group>"; };
-		506CB64902465AC1BBC4C157 /* APIResponseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponseTests.swift; sourceTree = "<group>"; };
 		5BD3A8D8EAADD432067C6B34 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		66D97122E09019E7133E1349 /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
-		68B430EB703133A90DA21658 /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
-		68BE1E7916C050B8B5587B65 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		867BDB7C7AFA844188D896E5 /* EventsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsPlaceholderView.swift; sourceTree = "<group>"; };
-		8E196B7C182765B74ABB88D0 /* BusinessesPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessesPlaceholderView.swift; sourceTree = "<group>"; };
 		956757B2C8AF16520926C337 /* SookeCommunity.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SookeCommunity.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9602248B2D211FD3C0A9F37B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		9BC366681143CAA0D6045CFF /* CategoryModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryModelTests.swift; sourceTree = "<group>"; };
-		A1EDED53480F9511C91B48E0 /* SookeTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SookeTheme.swift; sourceTree = "<group>"; };
 		A4681AA17C1A45A4C4703FD4 /* SookeCommunityApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SookeCommunityApp.swift; sourceTree = "<group>"; };
-		B224F6EA9E8B317B1B050E84 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
-		C90156C90BFA00DBD3AA73F0 /* Business.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Business.swift; sourceTree = "<group>"; };
-		C98E31A671F907607E821B17 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
-		D714BA933C58086BA00A51A6 /* BusinessModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessModelTests.swift; sourceTree = "<group>"; };
 		F0BCB204233018791514AB83 /* SookeCommunityTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SookeCommunityTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1ABBAD383AC408A93907F66 /* SookeCommunityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SookeCommunityTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -78,14 +44,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		006722903ECCDA1FA0443D10 /* Services */ = {
-			isa = PBXGroup;
-			children = (
-				B224F6EA9E8B317B1B050E84 /* APIClient.swift */,
-			);
-			path = Services;
-			sourceTree = "<group>";
-		};
 		176C9E7517E8FA22C1F61A95 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -95,82 +53,17 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		319343D030779F239AF3947B /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				21168015A2EF968E7839D79F /* APIResponse.swift */,
-				C90156C90BFA00DBD3AA73F0 /* Business.swift */,
-				2D842D93F6B8D6CBB457B862 /* Category.swift */,
-				66D97122E09019E7133E1349 /* Menu.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		3F6A907C39BBC0E5B0B27F57 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				8E196B7C182765B74ABB88D0 /* BusinessesPlaceholderView.swift */,
-				867BDB7C7AFA844188D896E5 /* EventsPlaceholderView.swift */,
-				68BE1E7916C050B8B5587B65 /* HomeView.swift */,
-				3FE9B2A30639FD437D5CD69E /* MapPlaceholderView.swift */,
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
 		57A1236A35F9C846B58680A6 /* SookeCommunityTests */ = {
 			isa = PBXGroup;
 			children = (
-				7E1948FA5E469EEA0C1DC374 /* Models */,
-				C150DD58EF3ABD6F4D31D9D8 /* Services */,
-				CF1503F1379600A237978EBD /* Theme */,
 				F1ABBAD383AC408A93907F66 /* SookeCommunityTests.swift */,
 			);
 			path = SookeCommunityTests;
 			sourceTree = "<group>";
 		};
-		7E1948FA5E469EEA0C1DC374 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				506CB64902465AC1BBC4C157 /* APIResponseTests.swift */,
-				D714BA933C58086BA00A51A6 /* BusinessModelTests.swift */,
-				9BC366681143CAA0D6045CFF /* CategoryModelTests.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		C150DD58EF3ABD6F4D31D9D8 /* Services */ = {
-			isa = PBXGroup;
-			children = (
-				17839B82759ABD54B046006E /* APIClientTests.swift */,
-				C98E31A671F907607E821B17 /* MockURLProtocol.swift */,
-			);
-			path = Services;
-			sourceTree = "<group>";
-		};
-		C2ECFE71D21DF7AD2A588849 /* Navigation */ = {
-			isa = PBXGroup;
-			children = (
-				68B430EB703133A90DA21658 /* AppTab.swift */,
-			);
-			path = Navigation;
-			sourceTree = "<group>";
-		};
-		CF1503F1379600A237978EBD /* Theme */ = {
-			isa = PBXGroup;
-			children = (
-				207ECCB379C696A8617953AB /* ThemeTests.swift */,
-			);
-			path = Theme;
-			sourceTree = "<group>";
-		};
 		D26D3EEFEB048855AAC05C8F /* SookeCommunity */ = {
 			isa = PBXGroup;
 			children = (
-				319343D030779F239AF3947B /* Models */,
-				C2ECFE71D21DF7AD2A588849 /* Navigation */,
-				006722903ECCDA1FA0443D10 /* Services */,
-				F4379117E979EB3F6E25712B /* Theme */,
-				3F6A907C39BBC0E5B0B27F57 /* Views */,
 				5BD3A8D8EAADD432067C6B34 /* ContentView.swift */,
 				9602248B2D211FD3C0A9F37B /* Info.plist */,
 				A4681AA17C1A45A4C4703FD4 /* SookeCommunityApp.swift */,
@@ -185,14 +78,6 @@
 				57A1236A35F9C846B58680A6 /* SookeCommunityTests */,
 				176C9E7517E8FA22C1F61A95 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		F4379117E979EB3F6E25712B /* Theme */ = {
-			isa = PBXGroup;
-			children = (
-				A1EDED53480F9511C91B48E0 /* SookeTheme.swift */,
-			);
-			path = Theme;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -280,19 +165,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FA84F4586B515FD394DFEF18 /* APIClient.swift in Sources */,
-				AA6F46D9608E4CA615450DA1 /* APIResponse.swift in Sources */,
-				30C9E52C95E692843594BD67 /* AppTab.swift in Sources */,
-				F605BBF17BB2171C3D0FF741 /* Business.swift in Sources */,
-				A03A122068813D4051760E8D /* BusinessesPlaceholderView.swift in Sources */,
-				D1F2FFC5E75D1EE15C5AF699 /* Category.swift in Sources */,
 				72EF951794721A0EF0080AC4 /* ContentView.swift in Sources */,
-				7F933FD44F8996CCED74870F /* EventsPlaceholderView.swift in Sources */,
-				944B7206119EBC4FBD3ABE74 /* HomeView.swift in Sources */,
-				740F707853CA25C7C0DDC1D8 /* MapPlaceholderView.swift in Sources */,
-				160A7266510249445F01CEA0 /* Menu.swift in Sources */,
 				AAF9C261FC2E917AE47658F8 /* SookeCommunityApp.swift in Sources */,
-				DCAE10FCE68125FB9600A8AE /* SookeTheme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -300,13 +174,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D8BC06A10838BC17EBB0EB2D /* APIClientTests.swift in Sources */,
-				E98A15E9C2744746498E9B65 /* APIResponseTests.swift in Sources */,
-				8C86AA60A3831E804EE3CF34 /* BusinessModelTests.swift in Sources */,
-				03021EA16B108AC1A7FCF483 /* CategoryModelTests.swift in Sources */,
-				FCB00B1A9484BEEAEC926D2B /* MockURLProtocol.swift in Sources */,
 				0DB0093A06E722AF441CA840 /* SookeCommunityTests.swift in Sources */,
-				809A4D7727F5A61715F6FAFA /* ThemeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

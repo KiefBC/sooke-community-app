@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: macos-latest
+    runs-on: macos-15
 
     defaults:
       run:
@@ -32,7 +32,7 @@ jobs:
         run: |
           xcodebuild -project SookeCommunity.xcodeproj \
             -scheme SookeCommunity \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
             build
 
@@ -40,6 +40,6 @@ jobs:
         run: |
           xcodebuild -project SookeCommunity.xcodeproj \
             -scheme SookeCommunity \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -skipPackagePluginValidation \
             test

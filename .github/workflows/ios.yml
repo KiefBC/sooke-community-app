@@ -36,6 +36,9 @@ jobs:
             -skipPackagePluginValidation \
             build
 
+      - name: Install iOS 18.2 Simulator
+        run: xcodebuild -downloadPlatform iOS
+
       - name: Run tests
         run: |
           xcodebuild -project SookeCommunity.xcodeproj \

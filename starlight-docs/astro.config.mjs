@@ -21,6 +21,12 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Guides',
+					items: [
+						{ label: 'SwiftUI Data Flow', slug: 'swiftui-data-guide' },
+					],
+				},
+				{
 					label: 'Architecture Decision Records',
 					autogenerate: { directory: 'decisions' },
 				},

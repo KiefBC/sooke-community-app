@@ -136,9 +136,9 @@ func seed(db *sql.DB) error {
 		{"Sooke Harbour House", "Historic waterfront inn with Pacific Northwest fine dining", "1528 Whiffen Spit Rd", 48.356618349381755, -123.72733056442932, "Restaurant", "seed_general_user", "111-111-1111", "info@sookeharbourhouse.dev", "https://sookeharbourhouse.dev"},
 		{"Mom's Cafe", "Family-friendly breakfast and lunch spot loved by locals", "2036 Shields Rd", 48.377112314153386, -123.7254915288472, "Cafe", "seed_business_owner", "222-222-2222", "hello@momscafe.dev", "https://momscafe.dev"},
 		{"Sooke Landing Marina", "Full-service marina with boat rentals and moorage", "6585 Goodmere Rd", 48.37801614501773, -123.71648471022064, "Outdoor Recreation", "seed_super_admin", "333-333-3333", "dock@sookemarina.dev", "https://sookemarina.dev"},
-		{"King Tide Fishing Charters", "Guided salmon and halibut fishing on the Strait of Juan de Fuca", "6969 Sea Lion Way", 48.35785881994283, -123.72657954591688, "Outdoor Recreation", "", "", "", ""},
-		{"Sooke Community Hall", "Local gathering space for markets, meetings, and events", "2037 Shields Rd", 48.37759971334821, -123.72517166628057, "Community", "", "", "", ""},
-		{"The Stick In The Mud's Roastoreum", "Small-batch coffee roaster and cozy neighbourhood cafe", "6711 Eustace Rd", 48.37789738050146, -123.7245055441908, "Cafe", "", "", "", ""},
+		{"King Tide Fishing Charters", "Guided salmon and halibut fishing on the Strait of Juan de Fuca", "6969 Sea Lion Way", 48.35785881994283, -123.72657954591688, "Outdoor Recreation", "", "444-444-4444", "bookings@kingtidecharters.dev", "https://kingtidecharters.dev"},
+		{"Sooke Community Hall", "Local gathering space for markets, meetings, and events", "2037 Shields Rd", 48.37759971334821, -123.72517166628057, "Community", "", "555-555-5555", "info@sookecommunityhall.dev", ""},
+		{"The Stick In The Mud's Roastoreum", "Small-batch coffee roaster and cozy neighbourhood cafe", "6711 Eustace Rd", 48.37789738050146, -123.7245055441908, "Cafe", "", "666-666-6666", "hello@stickinthemud.dev", "https://stickinthemud.dev"},
 	}
 
 	for _, biz := range seedBusinesses {
@@ -146,13 +146,16 @@ func seed(db *sql.DB) error {
 		if biz.OwnerClerkID != "" {
 			ownerClerkID = biz.OwnerClerkID
 		}
+		phone := nullIfEmpty(biz.Phone)
+		email := nullIfEmpty(biz.Email)
+		website := nullIfEmpty(biz.Website)
 		if _, err := db.Exec(
 			`INSERT INTO businesses (owner_id, category_id, name, slug, description, phone, email, website, address, latitude, longitude)
 			 VALUES ((SELECT id FROM users WHERE clerk_id = $1), (SELECT id FROM business_categories WHERE name = $2), $3, $4, $5, $6, $7, $8, $9, $10, $11)
 			 ON CONFLICT (slug) DO UPDATE SET owner_id = COALESCE((SELECT id FROM users WHERE clerk_id = $1), businesses.owner_id),
 			 category_id = (SELECT id FROM business_categories WHERE name = $2),
 			 name = $3, description = $5, phone = $6, email = $7, website = $8, address = $9, latitude = $10, longitude = $11`,
-			ownerClerkID, biz.Category, biz.Name, slug.GenerateSlug(biz.Name), biz.Description, biz.Phone, biz.Email, biz.Website, biz.Address, biz.Lat, biz.Lng,
+			ownerClerkID, biz.Category, biz.Name, slug.GenerateSlug(biz.Name), biz.Description, phone, email, website, biz.Address, biz.Lat, biz.Lng,
 		); err != nil {
 			return fmt.Errorf("failed to seed business %q: %w", biz.Name, err)
 		}
@@ -340,4 +343,13 @@ func seed(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+// nullIfEmpty returns nil if s is empty, allowing Postgres to store NULL
+// instead of an empty string for optional fields.
+func nullIfEmpty(s string) interface{} {
+	if s == "" {
+		return nil
+	}
+	return s
 }

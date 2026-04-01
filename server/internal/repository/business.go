@@ -125,6 +125,9 @@ func GetBusinessBySlug(ctx context.Context, q Querier, slug string) (*BusinessDe
 		return nil, fmt.Errorf("failed to query business: %w", err)
 	}
 
+	bd.Hours = []BusinessHour{}
+	bd.Menus = []Menu{}
+
 	hoursRows, err := q.QueryContext(ctx,
 		`SELECT day_of_week, open_time, close_time, is_closed
 		 FROM business_hours

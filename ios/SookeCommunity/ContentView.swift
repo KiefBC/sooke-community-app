@@ -2,23 +2,22 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(ThemeManager.self) private var themeManager
+    @Environment(\.apiClient) private var apiClient
     @State private var selectedTab: AppTab = .home
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            ForEach(AppTab.allCases, id: \.self) { tab in
-                Group {
-                    switch tab {
-                    case .home: HomeView()
-                    case .businesses: BusinessesPlaceholderView()
-                    case .events: EventsPlaceholderView()
-                    case .map: MapPlaceholderView()
-                    }
-                }
-                .tabItem {
-                    Label(tab.title, systemImage: tab.icon)
-                }
-                .tag(tab)
+            Tab(AppTab.home.title, systemImage: AppTab.home.icon, value: .home) {
+                HomeView()
+            }
+            Tab(AppTab.businesses.title, systemImage: AppTab.businesses.icon, value: .businesses) {
+                BusinessListView(apiClient: apiClient)
+            }
+            Tab(AppTab.events.title, systemImage: AppTab.events.icon, value: .events) {
+                EventsPlaceholderView()
+            }
+            Tab(AppTab.map.title, systemImage: AppTab.map.icon, value: .map) {
+                MapPlaceholderView()
             }
         }
         .tint(themeManager.colors.primary)

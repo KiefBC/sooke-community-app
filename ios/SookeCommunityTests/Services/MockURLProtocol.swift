@@ -4,11 +4,13 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var mockResponseData: Data?
     nonisolated(unsafe) static var mockStatusCode: Int = 200
     nonisolated(unsafe) static var mockError: Error?
+    nonisolated(unsafe) static var lastRequest: URLRequest?
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
+        MockURLProtocol.lastRequest = request
         if let error = MockURLProtocol.mockError {
             client?.urlProtocol(self, didFailWithError: error)
             return
@@ -36,5 +38,6 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
         mockResponseData = nil
         mockStatusCode = 200
         mockError = nil
+        lastRequest = nil
     }
 }

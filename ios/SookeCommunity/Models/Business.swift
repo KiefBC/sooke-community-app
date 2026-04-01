@@ -1,7 +1,7 @@
 import Foundation
 
 // Business represents a business list item returned by the API.
-struct Business: Codable, Identifiable, Sendable {
+struct Business: Codable, Identifiable, Sendable, Hashable {
     let id: Int64
     let name: String
     let slug: String
@@ -81,3 +81,4 @@ struct BusinessDetails: Codable, Identifiable, Sendable {
         case menus
     }
 }
+

@@ -2,7 +2,7 @@ name: SookeCommunity
 options:
   bundleIdPrefix: com.kiefbc
   deploymentTarget:
-    iOS: "17.0"
+    iOS: "18.0"
   xcodeVersion: "16.0"
   groupSortPosition: top
 

@@ -66,8 +66,8 @@ struct BusinessCardView: View {
         .glassEffect(.regular, in: .rect(cornerRadius: 12))
     }
 
-    private var currentHoursStatus: HoursStatus? {
-        details?.hoursStatus()
+    private var currentHoursStatus: HoursStatus {
+        details?.hoursStatus() ?? business.hoursStatus()
     }
 
     @ViewBuilder
@@ -77,23 +77,25 @@ struct BusinessCardView: View {
                 .font(.caption)
                 .foregroundStyle(hoursColor)
 
-            if let status = currentHoursStatus {
-                Text(status.displayText)
-                    .font(.caption)
-                    .foregroundStyle(hoursColor)
-            } else {
-                Text("Hours not available")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            Text(currentHoursStatus.displayText)
+                .font(.caption)
+                .foregroundStyle(hoursColor)
         }
     }
 
     private var hoursColor: Color {
-        guard let status = currentHoursStatus else {
+        switch currentHoursStatus {
+        case .open:
+            return themeManager.colors.statusOpen
+        case .closingSoon:
+            return themeManager.colors.statusSoon
+        case .opensSoon:
+            return themeManager.colors.statusSoon
+        case .closed:
+            return themeManager.colors.statusClosed
+        case .unknown:
             return .secondary
         }
-        return status.isOpen ? .green : .secondary
     }
 }
 
@@ -110,7 +112,8 @@ struct BusinessCardView: View {
         longitude: -123.7322,
         phone: "(250) 642-3421",
         email: "info@sookeharbourhouse.com",
-        website: "https://sookeharbourhouse.com"
+        website: "https://sookeharbourhouse.com",
+        todayHours: BusinessHour(dayOfWeek: 3, openTime: "09:00:00", closeTime: "17:00:00", isClosed: false)
     )
 
     BusinessCardView(business: sampleBusiness)

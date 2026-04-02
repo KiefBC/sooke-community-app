@@ -15,18 +15,19 @@ type Querier interface {
 
 // Business represents a business entity in the database.
 type Business struct {
-	ID           int64   `json:"id"`
-	Name         string  `json:"name"`
-	Slug         string  `json:"slug"`
-	Description  *string `json:"description"` // nullable
-	CategoryName string  `json:"category_name"`
-	CategorySlug string  `json:"category_slug"`
-	Address      string  `json:"address"`
-	Latitude     float64 `json:"latitude"`
-	Longitude    float64 `json:"longitude"`
-	Phone        *string `json:"phone"`   // nullable
-	Email        *string `json:"email"`   // nullable
-	Website      *string `json:"website"` // nullable
+	ID           int64        `json:"id"`
+	Name         string       `json:"name"`
+	Slug         string       `json:"slug"`
+	Description  *string      `json:"description"` // nullable
+	CategoryName string       `json:"category_name"`
+	CategorySlug string       `json:"category_slug"`
+	Address      string       `json:"address"`
+	Latitude     float64      `json:"latitude"`
+	Longitude    float64      `json:"longitude"`
+	Phone        *string      `json:"phone"`        // nullable
+	Email        *string      `json:"email"`        // nullable
+	Website      *string      `json:"website"`      // nullable
+	TodayHours   *BusinessHour `json:"today_hours"` // nullable -- only today's hours for list view
 }
 
 // BusinessDetails represents a business along with its hours and menus.
@@ -78,13 +79,17 @@ func ListBusinesses(ctx context.Context, q Querier, search, categorySlug string,
 
 	// The $1 = '' trick prevents dynamic sql with string concatentation. The OR short-circuits to always true
 	rows, err := q.QueryContext(ctx,
-		`SELECT b.id, b.name, b.slug, b.description, bc.name AS category_name, bc.slug AS category_slug, b.address, b.latitude, b.longitude, b.phone, b.email, b.website
-			 FROM businesses b
-		JOIN business_categories bc ON b.category_id = bc.id
-		WHERE ($1 = '' OR b.name ILIKE '%' || $1 || '%')
-			AND ($2 = '' OR bc.slug = $2)
-		ORDER BY b.name ASC
-		LIMIT $3 OFFSET $4`,
+		`SELECT b.id, b.name, b.slug, b.description, bc.name AS category_name, bc.slug AS category_slug,
+		        b.address, b.latitude, b.longitude, b.phone, b.email, b.website,
+		        bh.day_of_week, bh.open_time, bh.close_time, bh.is_closed
+		 FROM businesses b
+		 JOIN business_categories bc ON b.category_id = bc.id
+		 LEFT JOIN business_hours bh ON bh.business_id = b.id
+		     AND bh.day_of_week = EXTRACT(DOW FROM NOW())
+		 WHERE ($1 = '' OR b.name ILIKE '%' || $1 || '%')
+		     AND ($2 = '' OR bc.slug = $2)
+		 ORDER BY b.name ASC
+		 LIMIT $3 OFFSET $4`,
 		search, categorySlug, limit, offset,
 	)
 	if err != nil {
@@ -95,9 +100,24 @@ func ListBusinesses(ctx context.Context, q Querier, search, categorySlug string,
 	businesses := []Business{}
 	for rows.Next() {
 		var b Business
-		err := rows.Scan(&b.ID, &b.Name, &b.Slug, &b.Description, &b.CategoryName, &b.CategorySlug, &b.Address, &b.Latitude, &b.Longitude, &b.Phone, &b.Email, &b.Website)
+		var bhDayOfWeek sql.NullInt64
+		var bhOpenTime, bhCloseTime sql.NullString
+		var bhIsClosed sql.NullBool
+		err := rows.Scan(
+			&b.ID, &b.Name, &b.Slug, &b.Description, &b.CategoryName, &b.CategorySlug,
+			&b.Address, &b.Latitude, &b.Longitude, &b.Phone, &b.Email, &b.Website,
+			&bhDayOfWeek, &bhOpenTime, &bhCloseTime, &bhIsClosed,
+		)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to scan business: %w", err)
+		}
+		if bhDayOfWeek.Valid {
+			b.TodayHours = &BusinessHour{
+				DayOfWeek: int(bhDayOfWeek.Int64),
+				OpenTime:  bhOpenTime.String,
+				CloseTime: bhCloseTime.String,
+				IsClosed:  bhIsClosed.Bool,
+			}
 		}
 		businesses = append(businesses, b)
 	}

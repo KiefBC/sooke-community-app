@@ -1,31 +1,29 @@
-//
-//  HoursStatus.swift
-//  SookeCommunity
-//
-//  Created by Kiefer Hay on 2026-03-29.
-//
-
 import Foundation
 
 enum HoursStatus {
     case open(closesAt: String)
+    case closingSoon(closesAt: String)
     case opensSoon(opensAt: String)
     case closed
     case unknown
 
     var isOpen: Bool {
-        if case .open = self {
+        switch self {
+        case .open, .closingSoon:
             return true
+        default:
+            return false
         }
-        return false
     }
 
     var displayText: String {
         switch self {
         case .open(let closesAt):
             return "Open - Closes at \(closesAt.formattedAsTime)"
+        case .closingSoon(let closesAt):
+            return "Closing soon - \(closesAt.formattedAsTime)"
         case .opensSoon(let opensAt):
-            return "Opens at \(opensAt.formattedAsTime)"
+            return "Opens soon - \(opensAt.formattedAsTime)"
         case .closed:
             return "Closed"
         case .unknown:

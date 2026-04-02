@@ -116,6 +116,109 @@ func TestGetBusinessBySlug(t *testing.T) {
 	}
 }
 
+func TestListBusinessesTodayHours(t *testing.T) {
+	// Uses EXTRACT(DOW FROM NOW()) so the inserted hours match "today" regardless of when tests run
+	const setup = `
+	INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant') ON CONFLICT DO NOTHING;
+	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Has Hours Today', 'has-hours-today', '1 Main St', 48.35, -123.72);
+	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
+		VALUES ((SELECT id FROM businesses WHERE slug = 'has-hours-today'), EXTRACT(DOW FROM NOW())::int, '09:00', '17:00', false);
+	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'No Hours', 'no-hours', '2 Main St', 48.35, -123.72);
+	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Wrong Day Only', 'wrong-day-only', '3 Main St', 48.35, -123.72);
+	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
+		VALUES ((SELECT id FROM businesses WHERE slug = 'wrong-day-only'), (EXTRACT(DOW FROM NOW())::int + 1) % 7, '10:00', '18:00', false);
+	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Closed Today', 'closed-today', '4 Main St', 48.35, -123.72);
+	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
+		VALUES ((SELECT id FROM businesses WHERE slug = 'closed-today'), EXTRACT(DOW FROM NOW())::int, '09:00', '17:00', true);
+`
+
+	tests := []struct {
+		name           string
+		search         string
+		wantSlug       string
+		wantHasHours   bool
+		wantIsClosed   bool
+		wantOpenTime   string
+	}{
+		{
+			name:         "business with hours today has TodayHours populated",
+			search:       "Has Hours Today",
+			wantSlug:     "has-hours-today",
+			wantHasHours: true,
+			wantIsClosed: false,
+			wantOpenTime: "09:00:00",
+		},
+		{
+			name:         "business without any hours has nil TodayHours",
+			search:       "No Hours",
+			wantSlug:     "no-hours",
+			wantHasHours: false,
+		},
+		{
+			name:         "business with hours for different day has nil TodayHours",
+			search:       "Wrong Day Only",
+			wantSlug:     "wrong-day-only",
+			wantHasHours: false,
+		},
+		{
+			name:         "business closed today has TodayHours with IsClosed true",
+			search:       "Closed Today",
+			wantSlug:     "closed-today",
+			wantHasHours: true,
+			wantIsClosed: true,
+			wantOpenTime: "09:00:00",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx, err := testDB.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin transaction: %v", err)
+			}
+			defer tx.Rollback()
+
+			if _, err := tx.Exec(setup); err != nil {
+				t.Fatalf("setup failed: %v", err)
+			}
+
+			businesses, _, err := repository.ListBusinesses(context.Background(), tx, tt.search, "", 20, 0)
+			if err != nil {
+				t.Fatalf("ListBusinesses returned error: %v", err)
+			}
+
+			if len(businesses) != 1 {
+				t.Fatalf("got %d businesses, want 1", len(businesses))
+			}
+
+			b := businesses[0]
+			if b.Slug != tt.wantSlug {
+				t.Errorf("got slug %q, want %q", b.Slug, tt.wantSlug)
+			}
+
+			if tt.wantHasHours {
+				if b.TodayHours == nil {
+					t.Fatal("got nil TodayHours, want non-nil")
+				}
+				if b.TodayHours.IsClosed != tt.wantIsClosed {
+					t.Errorf("got IsClosed %v, want %v", b.TodayHours.IsClosed, tt.wantIsClosed)
+				}
+				if b.TodayHours.OpenTime != tt.wantOpenTime {
+					t.Errorf("got OpenTime %q, want %q", b.TodayHours.OpenTime, tt.wantOpenTime)
+				}
+			} else {
+				if b.TodayHours != nil {
+					t.Errorf("got TodayHours %+v, want nil", b.TodayHours)
+				}
+			}
+		})
+	}
+}
+
 func TestListBusinesses(t *testing.T) {
 	const setup = `
 	INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant') ON CONFLICT DO NOTHING;

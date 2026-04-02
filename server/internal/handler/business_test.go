@@ -32,6 +32,9 @@ const businessSeed = `
 		VALUES ((SELECT id FROM business_categories WHERE slug = 'cafe'), 'Moms Cafe', 'moms-cafe', '2036 Shields Rd', 48.3761, -123.7254);
 	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
 		VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 1, '09:00', '17:00', false);
+	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
+		VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), EXTRACT(DOW FROM NOW())::int, '09:00', '17:00', false)
+		ON CONFLICT (business_id, day_of_week) DO NOTHING;
 	INSERT INTO menus (business_id, name) VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 'Dinner');
 	INSERT INTO menu_items (menu_id, name, price) VALUES ((SELECT id FROM menus WHERE name = 'Dinner'), 'Fish and Chips', '12.99');
 `
@@ -61,6 +64,13 @@ func TestListBusinesses(t *testing.T) {
 		{
 			name:            "category filter works",
 			url:             "/api/v1/businesses?category=cafe",
+			wantStatus:      http.StatusOK,
+			wantMinItems:    1,
+			wantContentType: "application/json",
+		},
+		{
+			name:            "today_hours included for business with hours",
+			url:             "/api/v1/businesses?search=harbour",
 			wantStatus:      http.StatusOK,
 			wantMinItems:    1,
 			wantContentType: "application/json",
@@ -104,6 +114,15 @@ func TestListBusinesses(t *testing.T) {
 			for _, b := range body.Items {
 				if b.Name == "" || b.Slug == "" || b.Address == "" {
 					t.Errorf("required fields missing: name=%q slug=%q address=%q", b.Name, b.Slug, b.Address)
+				}
+			}
+
+			// Verify today_hours is present for businesses with hours seeded for today
+			if tt.name == "today_hours included for business with hours" {
+				for _, b := range body.Items {
+					if b.Slug == "sooke-harbour-house" && b.TodayHours == nil {
+						t.Error("expected today_hours for sooke-harbour-house, got nil")
+					}
 				}
 			}
 

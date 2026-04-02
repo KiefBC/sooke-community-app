@@ -146,7 +146,8 @@ struct BusinessDetailView: View {
         longitude: -123.7322,
         phone: "(250) 642-3421",
         email: "info@sookeharbourhouse.com",
-        website: "https://sookeharbourhouse.com"
+        website: "https://sookeharbourhouse.com",
+        todayHours: nil
     )
 
     NavigationStack {

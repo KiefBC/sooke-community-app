@@ -98,7 +98,7 @@ enum SookeTheme: String, CaseIterable, Sendable {
 
 // MARK: - ThemeManager
 
-@Observable final class ThemeManager {
+@MainActor @Observable final class ThemeManager {
     private static let userDefaultsKey = "selectedTheme"
     private let defaults: UserDefaults
 

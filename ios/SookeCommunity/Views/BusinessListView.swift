@@ -22,6 +22,7 @@ struct BusinessListView: View {
         NavigationStack {
             VStack {
                 ScrollView(.horizontal, showsIndicators: false) {
+                    GlassEffectContainer(spacing: 8) {
                     HStack(spacing: 8) {
                         ForEach(vm.categories) { cat in
                             let isSelected = vm.selectedCategory == cat
@@ -33,19 +34,16 @@ struct BusinessListView: View {
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
                                     .foregroundColor(isSelected ? .white : themeManager.colors.accent)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .fill(isSelected ? themeManager.colors.accent : Color.clear)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(themeManager.colors.accent, lineWidth: 1)
-                                    )
                             }
                             .buttonStyle(.plain)
+                            .glassEffect(
+                                isSelected ? .regular.tint(themeManager.colors.accent).interactive() : .regular.interactive(),
+                                in: .capsule
+                            )
                         }
                     }
                     .padding(.horizontal)
+                    }
                 }
                 .padding(.vertical, 5)
                 List {

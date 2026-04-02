@@ -8,7 +8,6 @@
 import Foundation
 
 extension BusinessDetails {
-    /// Returns the current open status and hours information.
     func hoursStatus(for date: Date = Date()) -> HoursStatus {
         let calendar = Calendar.current
         let dayOfWeek = calendar.component(.weekday, from: date) - 1
@@ -43,7 +42,6 @@ extension BusinessDetails {
         }
     }
 
-    /// Returns a formatted string for today's hours.
     func todayHoursString(for date: Date = Date()) -> String {
         let calendar = Calendar.current
         let dayOfWeek = calendar.component(.weekday, from: date) - 1

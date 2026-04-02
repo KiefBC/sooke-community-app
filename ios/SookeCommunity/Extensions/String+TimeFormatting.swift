@@ -20,7 +20,6 @@ extension String {
         return f
     }()
 
-    /// Converts "HH:mm:ss" to "h:mm a" for display. Returns self if parsing fails.
     var formattedAsTime: String {
         guard let date = Self.timeInputFormatter.date(from: self) else {
             return self

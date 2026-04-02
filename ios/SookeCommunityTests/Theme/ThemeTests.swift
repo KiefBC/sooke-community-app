@@ -3,6 +3,7 @@ import Foundation
 @testable import SookeCommunity
 
 @Suite("Theme Tests")
+@MainActor
 struct ThemeTests {
 
     @Test func allThemesExist() {

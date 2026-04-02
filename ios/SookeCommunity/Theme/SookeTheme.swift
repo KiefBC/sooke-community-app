@@ -11,6 +11,11 @@ struct ThemeColors: Sendable {
     let secondary: Color
     let muted: Color
     let border: Color
+
+    // Semantic status colors for hours display
+    let statusOpen = Color(red: 0.30, green: 0.75, blue: 0.40)
+    let statusClosed = Color(red: 0.80, green: 0.35, blue: 0.35)
+    let statusSoon = Color(red: 0.85, green: 0.65, blue: 0.25)
 }
 
 // MARK: - SookeTheme
@@ -98,7 +103,7 @@ enum SookeTheme: String, CaseIterable, Sendable {
 
 // MARK: - ThemeManager
 
-@Observable final class ThemeManager {
+@MainActor @Observable final class ThemeManager {
     private static let userDefaultsKey = "selectedTheme"
     private let defaults: UserDefaults
 

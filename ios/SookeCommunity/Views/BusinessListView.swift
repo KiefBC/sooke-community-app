@@ -20,56 +20,23 @@ struct BusinessListView: View {
     var body: some View {
         @Bindable var vm = vm
         NavigationStack {
-            VStack {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(vm.categories) { cat in
-                            let isSelected = vm.selectedCategory == cat
-                            Button {
-                                vm.selectCategory(isSelected ? nil : cat)
-                            } label: {
-                                Text(cat.name)
-                                    .font(.subheadline)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .foregroundColor(isSelected ? .white : themeManager.colors.accent)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .fill(isSelected ? themeManager.colors.accent : Color.clear)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(themeManager.colors.accent, lineWidth: 1)
-                                    )
-                            }
-                            .buttonStyle(.plain)
-                        }
+            List {
+                ForEach(vm.items) { item in
+                    NavigationLink(value: item) {
+                        BusinessCardView(business: item)
                     }
-                    .padding(.horizontal)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .listRowBackground(Color.clear)
                 }
-                .padding(.vertical, 5)
-                List {
-                    ForEach(vm.items) { item in
-                        NavigationLink(value: item) {
-                            BusinessCardView(business: item)
-                        }
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                        .listRowBackground(Color.clear)
-                    }
+            }
+            .searchable(text: $vm.searchText, prompt: "Search Businesses")
+            .task(id: vm.searchText) {
+                if !vm.searchText.isEmpty {
+                    do {
+                        try await Task.sleep(for: .milliseconds(300))
+                    } catch { return }
                 }
-                .searchable(text: $vm.searchText, prompt: "Search Businesses")
-                .task(id: vm.searchText) {
-                    if !vm.searchText.isEmpty {
-                        do {
-                            try await Task.sleep(for: .milliseconds(300))
-                        } catch { return }
-                    }
-                    await vm.fetchBusinesses()
-                }
-                .scrollContentBackground(.hidden)
-                .navigationDestination(for: Business.self) { business in
-                    BusinessDetailView(business: business, apiClient: apiClient)
-                }
+                await vm.fetchBusinesses()
             }
             .task {
                 await vm.fetchCategories()
@@ -77,11 +44,44 @@ struct BusinessListView: View {
             .onChange(of: vm.selectedCategory) {
                 Task { await vm.fetchBusinesses() }
             }
+            .scrollContentBackground(.hidden)
+            .navigationDestination(for: Business.self) { business in
+                BusinessDetailView(business: business, apiClient: apiClient)
+            }
+            .safeAreaInset(edge: .top) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    GlassEffectContainer(spacing: 8) {
+                        HStack(spacing: 8) {
+                            ForEach(vm.categories) { cat in
+                                let isSelected = vm.selectedCategory == cat
+                                Button {
+                                    vm.selectCategory(isSelected ? nil : cat)
+                                } label: {
+                                    Text(cat.name)
+                                        .font(.subheadline)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .foregroundColor(isSelected ? .white : themeManager.colors.accent)
+                                }
+                                .buttonStyle(.plain)
+                                .glassEffect(
+                                    isSelected ? .regular.tint(themeManager.colors.accent).interactive() : .regular.interactive(),
+                                    in: .capsule
+                                )
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+                .padding(.vertical, 5)
+                .background(themeManager.colors.background)
+            }
+            .navigationTitle("Businesses")
+            .navigationBarTitleDisplayMode(.inline)
             .background(themeManager.colors.background.ignoresSafeArea())
             .toolbarBackground(themeManager.colors.background, for: .navigationBar)
             .toolbarBackgroundVisibility(.visible, for: .navigationBar)
         }
-        .background(themeManager.colors.background.ignoresSafeArea())
     }
 }
 

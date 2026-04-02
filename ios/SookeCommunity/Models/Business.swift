@@ -14,6 +14,7 @@ struct Business: Codable, Identifiable, Sendable, Hashable {
     let phone: String?
     let email: String?
     let website: String?
+    let todayHours: BusinessHour?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -28,12 +29,13 @@ struct Business: Codable, Identifiable, Sendable, Hashable {
         case phone
         case email
         case website
+        case todayHours = "today_hours"
     }
 }
 
 // BusinessHour represents the operating hours for a business on a specific day.
 // day_of_week: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-struct BusinessHour: Codable, Sendable {
+struct BusinessHour: Codable, Sendable, Hashable {
     let dayOfWeek: Int
     let openTime: String
     let closeTime: String

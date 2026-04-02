@@ -31,14 +31,14 @@ struct BusinessCardView: View {
             .frame(height: 180)
             .clipped()
 
-            // Business information
+            // Info
             VStack(alignment: .leading, spacing: 8) {
                 Text(business.name)
                     .font(.headline)
                     .foregroundStyle(themeManager.colors.accent)
                     .lineLimit(2)
 
-                // Review score placeholder
+                // Reviews
                 HStack(spacing: 4) {
                     ForEach(0..<5) { index in
                         Image(systemName: "star.fill")
@@ -50,7 +50,7 @@ struct BusinessCardView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                // Hours - showing if open/closed
+                // Hours
                 hoursView
 
                 // Category
@@ -62,13 +62,12 @@ struct BusinessCardView: View {
             }
             .padding(12)
         }
-        .background(themeManager.colors.background)
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .glassEffect(.regular, in: .rect(cornerRadius: 12))
     }
 
-    private var currentHoursStatus: HoursStatus? {
-        details?.hoursStatus()
+    private var currentHoursStatus: HoursStatus {
+        details?.hoursStatus() ?? business.hoursStatus()
     }
 
     @ViewBuilder
@@ -78,23 +77,25 @@ struct BusinessCardView: View {
                 .font(.caption)
                 .foregroundStyle(hoursColor)
 
-            if let status = currentHoursStatus {
-                Text(status.displayText)
-                    .font(.caption)
-                    .foregroundStyle(hoursColor)
-            } else {
-                Text("Hours not available")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            Text(currentHoursStatus.displayText)
+                .font(.caption)
+                .foregroundStyle(hoursColor)
         }
     }
 
     private var hoursColor: Color {
-        guard let status = currentHoursStatus else {
+        switch currentHoursStatus {
+        case .open:
+            return themeManager.colors.statusOpen
+        case .closingSoon:
+            return themeManager.colors.statusSoon
+        case .opensSoon:
+            return themeManager.colors.statusSoon
+        case .closed:
+            return themeManager.colors.statusClosed
+        case .unknown:
             return .secondary
         }
-        return status.isOpen ? .green : .secondary
     }
 }
 
@@ -111,7 +112,8 @@ struct BusinessCardView: View {
         longitude: -123.7322,
         phone: "(250) 642-3421",
         email: "info@sookeharbourhouse.com",
-        website: "https://sookeharbourhouse.com"
+        website: "https://sookeharbourhouse.com",
+        todayHours: BusinessHour(dayOfWeek: 3, openTime: "09:00:00", closeTime: "17:00:00", isClosed: false)
     )
 
     BusinessCardView(business: sampleBusiness)

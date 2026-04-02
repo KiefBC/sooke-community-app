@@ -69,6 +69,88 @@ struct BusinessModelTests {
         #expect(business.website == nil)
     }
 
+    // MARK: - Business today_hours decoding
+
+    @Test func decodesBusinessWithTodayHours() throws {
+        let json = """
+        {
+            "id": 5,
+            "name": "Open Shop",
+            "slug": "open-shop",
+            "description": null,
+            "category_name": "Retail",
+            "category_slug": "retail",
+            "address": "1 Main St",
+            "latitude": 48.37,
+            "longitude": -123.72,
+            "phone": null,
+            "email": null,
+            "website": null,
+            "today_hours": {
+                "day_of_week": 3,
+                "open_time": "09:00:00",
+                "close_time": "17:00:00",
+                "is_closed": false
+            }
+        }
+        """
+        let data = try #require(json.data(using: .utf8))
+        let business = try JSONDecoder().decode(Business.self, from: data)
+
+        let hours = try #require(business.todayHours)
+        #expect(hours.dayOfWeek == 3)
+        #expect(hours.openTime == "09:00:00")
+        #expect(hours.closeTime == "17:00:00")
+        #expect(hours.isClosed == false)
+    }
+
+    @Test func decodesBusinessWithNullTodayHours() throws {
+        let json = """
+        {
+            "id": 6,
+            "name": "No Hours Shop",
+            "slug": "no-hours-shop",
+            "description": null,
+            "category_name": "Retail",
+            "category_slug": "retail",
+            "address": "2 Main St",
+            "latitude": 48.37,
+            "longitude": -123.72,
+            "phone": null,
+            "email": null,
+            "website": null,
+            "today_hours": null
+        }
+        """
+        let data = try #require(json.data(using: .utf8))
+        let business = try JSONDecoder().decode(Business.self, from: data)
+
+        #expect(business.todayHours == nil)
+    }
+
+    @Test func decodesBusinessWithMissingTodayHours() throws {
+        let json = """
+        {
+            "id": 7,
+            "name": "Legacy Shop",
+            "slug": "legacy-shop",
+            "description": null,
+            "category_name": "Retail",
+            "category_slug": "retail",
+            "address": "3 Main St",
+            "latitude": 48.37,
+            "longitude": -123.72,
+            "phone": null,
+            "email": null,
+            "website": null
+        }
+        """
+        let data = try #require(json.data(using: .utf8))
+        let business = try JSONDecoder().decode(Business.self, from: data)
+
+        #expect(business.todayHours == nil)
+    }
+
     // MARK: - BusinessDetails decoding
 
     @Test func decodesBusinessDetailsWithHoursAndMenus() throws {

@@ -21,6 +21,7 @@ struct ContentView: View {
             }
         }
         .tint(themeManager.colors.primary)
+        .tabBarMinimizeBehavior(.onScrollDown)
     }
 }
 

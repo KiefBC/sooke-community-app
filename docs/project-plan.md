@@ -28,11 +28,10 @@ This is a personal project with no monetization goal. The developer is building 
 
 ### Mobile App
 
-- **Framework:** [Capacitor](https://capacitorjs.com/) -- wraps a web app in a native shell for iOS and Android.
-- **Frontend UI:** [Svelte 5](https://svelte.dev/) with [SvelteKit](https://kit.svelte.dev/) -- file-based routing, lightweight, fast iteration.
-- **Language:** TypeScript (UI and frontend logic).
-- **Targets:** iOS + Android via Capacitor native projects.
-- **See:** [ADR-001](/decisions/001-use-capacitor-over-tauri/) for why we chose Capacitor over Tauri v2.
+- **iOS:** SwiftUI (Swift 6.0, iOS 18.0+). Native app built with Xcode and XcodeGen.
+- **Android (future):** Kotlin + Jetpack Compose. Ported from the iOS app as a blueprint.
+- **Architecture:** MVVM with `@Observable` ViewModels, SwiftUI views, and an API service layer.
+- **See:** [ADR-013](/decisions/013-native-ios-android-over-capacitor/) for why we chose native over Capacitor (supersedes ADR-001).
 
 ### Backend API
 
@@ -51,14 +50,14 @@ This is a personal project with no monetization goal. The developer is building 
 
 ### Auth
 
-- **Provider:** [Clerk](https://clerk.com/) -- handles all auth UI and session management.
-- **Social login:** Google, Facebook, Apple, etc. Available to all users.
-- **JWT validation:** Go backend validates Clerk JWTs in Chi middleware on every protected route.
-- **See:** [ADR-002](/decisions/002-use-clerk-for-auth/) for why we chose Clerk.
+- **Provider:** [Firebase Auth](https://firebase.google.com/docs/auth) -- native SDKs for iOS and Android.
+- **Social login:** Google, Apple (required by App Store), Facebook. Available to all users.
+- **JWT validation:** Go backend validates Firebase JWTs using firebase-admin-go in Chi middleware on every protected route.
+- **See:** [ADR-014](/decisions/014-firebase-auth-over-clerk/) for why we chose Firebase Auth over Clerk (supersedes ADR-002).
 
 ### Maps
 
-- **Library:** [MapLibre GL JS](https://maplibre.org/) -- open-source map renderer embedded in the webview.
+- **Library:** [MapLibre Native iOS SDK](https://github.com/maplibre/maplibre-native) -- open-source native map renderer.
 - **Tile provider:** [MapTiler](https://www.maptiler.com/) free tier (100k tile loads/month).
 - **Usage:** Pin businesses and event locations on a map of Sooke.
 - **See:** [ADR-004](/decisions/004-use-maplibre-over-google-maps/) for why we chose MapLibre over Google Maps.
@@ -170,11 +169,10 @@ We test every layer of the application. The testing pyramid guides our approach:
 | Layer                   | What it tests                                        | Tools                                               |
 | ----------------------- | ---------------------------------------------------- | --------------------------------------------------- |
 | Unit tests (Go)         | Individual functions, service logic, validation      | Go standard `testing` package, table-driven tests   |
-| Unit tests (Svelte)     | Component rendering, reactive logic, form validation | Vitest + Svelte Testing Library                     |
+| Unit tests (Swift)      | ViewModels, models, services, theme                  | Swift Testing framework (`@Suite`, `@Test`)         |
 | Integration tests (API) | HTTP handlers with real DB, middleware chains        | Go `testing` + `httptest` + test Postgres container |
 | Integration tests (DB)  | Migrations, queries, constraints, foreign keys       | Go `testing` + test Postgres container              |
 | API contract tests      | Response shapes, status codes, error formats         | Go `testing` or Hurl                                |
-| E2E tests               | Full user flows through the app                      | Playwright                                          |
 
 Every milestone issue specifies which test layers are required. No issue is complete until its tests pass.
 

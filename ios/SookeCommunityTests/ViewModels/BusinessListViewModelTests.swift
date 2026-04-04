@@ -20,25 +20,25 @@ struct BusinessListViewModelTests {
     }
     
     func makeCategoryJSON(
-          categories: [(id: Int64, name: String, slug: String)] = [
-              (1, "Food", "food"),
-              (2, "Retail", "retail")
-          ]
-      ) -> Data {
-          let items = categories.map { c in
-              "{\"id\": \(c.id), \"name\": \"\(c.name)\", \"slug\": \"\(c.slug)\"}"
-          }.joined(separator: ",")
+        categories: [(id: Int64, name: String, slug: String)] = [
+            (1, "Food", "food"),
+            (2, "Retail", "retail")
+        ]
+    ) -> Data {
+        let items = categories.map { c in
+            "{\"id\": \(c.id), \"name\": \"\(c.name)\", \"slug\": \"\(c.slug)\"}"
+        }.joined(separator: ",")
                                                                                                                               
-          return """
+        return """
           {"items": [\(items)]}
           """.data(using: .utf8)!
-      }
+    }
     
     func makeErrorJSON(code: String = "server_error", message: String = "Internal Server Error") -> Data {
           """
           {"error": {"code": "\(code)", "message": "\(message)"}}
           """.data(using: .utf8)!
-      }
+    }
     
     func makePaginatedBusinessJSON(
         businesses: [(id: Int64, name: String, slug: String, categoryName: String, categorySlug: String)] = [
@@ -72,10 +72,29 @@ struct BusinessListViewModelTests {
     @Test func handlesError() async throws {
         MockURLProtocol.reset()
         MockURLProtocol.mockStatusCode = 500
-        MockURLProtocol.mockResponseData = makeErrorJSON(code: "server_error", message: "Internal Server Error BUG")
+        MockURLProtocol.mockResponseData = makeErrorJSON(
+            code: "server_error",
+            message: "Internal Server Error BUG"
+        )
         let vm = BusinessListViewModel(apiClient: makeTestClient())
         await vm.fetchBusinesses()
         
+        #expect(vm.items.isEmpty)
+        #expect(vm.error != nil)
+        #expect(vm.isLoading == false)
+    }
+    
+    @Test func categoryFetchHandlesError() async throws {
+        MockURLProtocol.reset()
+        MockURLProtocol.mockStatusCode = 500
+        MockURLProtocol.mockResponseData = makeErrorJSON(
+            code: "server_error",
+            message: "Internal Server Error BUG"
+        )
+        let vm = BusinessListViewModel(apiClient: makeTestClient())
+        await vm.fetchCategories()
+        
+        #expect(vm.categories.isEmpty)
         #expect(vm.items.isEmpty)
         #expect(vm.error != nil)
         #expect(vm.isLoading == false)
@@ -93,6 +112,16 @@ struct BusinessListViewModelTests {
         #expect(vm.isLoading == false)
     }
     
+    @Test func selectCategoryUpdatesState() async throws {
+        let vm = BusinessListViewModel(apiClient: makeTestClient())
+        vm.selectCategory(Category(id: 1, name: "Food", slug: "food"))
+        #expect(vm.selectedCategory?.name == "Food")
+        
+        vm.selectCategory(nil)
+        #expect(vm.selectedCategory == nil)
+        
+    }
+    
     @Test func searchesBusinesses() async throws {
         MockURLProtocol.reset()
         MockURLProtocol.mockResponseData = makePaginatedBusinessJSON()
@@ -108,7 +137,7 @@ struct BusinessListViewModelTests {
         #expect(url?.contains("search=Cafe") == true)
     }
     
-    @Test func filtersByCategory() async throws {
+    @Test func filtersByCategory() async   {
         MockURLProtocol.reset()
         MockURLProtocol.mockResponseData = makePaginatedBusinessJSON()
         let vm = BusinessListViewModel(apiClient: makeTestClient())
@@ -121,6 +150,48 @@ struct BusinessListViewModelTests {
         #expect(vm.items.first?.name == "Test Cafe")
         #expect(vm.isLoading == false)
         #expect(url?.contains("category=food") == true)
+    }
+    
+    @Test func selectCategoryFiltersBusinesses() async throws {
+        MockURLProtocol.reset()
+        MockURLProtocol.mockResponseData = makePaginatedBusinessJSON()
+        let vm = BusinessListViewModel(apiClient: makeTestClient())
+        let testCategory = Category(id: 1, name: "Food", slug: "food")
+        vm.selectCategory(testCategory)
+        await vm.fetchBusinesses()
+        
+        let url = MockURLProtocol.lastRequest?.url?.absoluteString
+        
+        #expect(vm.selectedCategory == testCategory)
+        #expect(vm.items.count == 1)
+        #expect(vm.items.first?.name == "Test Cafe")
+        #expect(vm.isLoading == false)
+        #expect(url?.contains("category=food") == true)
+    }
+    
+    @Test func clearingCategoryFetchesAll() async throws {
+        MockURLProtocol.reset()
+        MockURLProtocol.mockResponseData = makePaginatedBusinessJSON()
+        let vm = BusinessListViewModel(apiClient: makeTestClient())
+        vm.selectedCategory = Category(id: 1, name: "Food", slug: "food")
+        await vm.fetchBusinesses()
+        
+        MockURLProtocol.reset()
+        MockURLProtocol.mockResponseData = makePaginatedBusinessJSON(businesses: [
+            (1, "Test Retail", "test-retail", "Food", "food"),
+            (2, "Test Cafe", "test-cafe", "Retail", "retail")
+        ])
+        
+        vm.selectCategory(nil)
+        await vm.fetchBusinesses()
+        
+        let url = MockURLProtocol.lastRequest?.url?.absoluteString
+        
+        #expect(vm.selectedCategory == nil)
+        #expect(vm.items.count == 2)
+        #expect(vm.items.first?.name == "Test Retail")
+        #expect(vm.isLoading == false)
+        #expect(url?.contains("category=") == false)
     }
     
     @Test func isLoadingDefaultsToFalse() async throws {

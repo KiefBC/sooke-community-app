@@ -6,14 +6,34 @@
 </div>
 
 
-A mobile-first community app for Sooke, BC. Built with SvelteKit, Capacitor, Go, and PostgreSQL.
+A mobile-first community app for Sooke, BC. Built with SwiftUI (iOS), Go, and PostgreSQL.
 
 ## Prerequisites
 
 - Go (see `server/go.mod` for version)
-- Node.js 18+
+- Xcode 26.4+ with iOS 26 SDK
+- XcodeGen: `brew install xcodegen`
 - PostgreSQL
 - goose: `go install github.com/pressly/goose/v3/cmd/goose@latest`
+
+## iOS App
+
+```bash
+cd ios
+xcodegen generate
+open SookeCommunity.xcodeproj
+```
+
+XcodeGen generates the Xcode project from `project.yml`. Run `xcodegen generate` after adding or removing Swift files. The only external dependency is Kingfisher (image caching), pulled automatically via SPM.
+
+### Tests
+
+```bash
+cd ios
+xcodebuild test -scheme SookeCommunity -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+```
+
+Tests use the Swift Testing framework (`@Suite`, `@Test`). See `docs/swift-testing-guide.md` for patterns and conventions.
 
 ## Environment Setup
 
@@ -81,16 +101,14 @@ go run ./cmd/seed
 
 Inserts sample Sooke businesses, categories, and event types. Idempotent.
 
-## Health Check
+## API Endpoints
 
-```bash
-curl http://localhost:8080/api/v1/health
-```
+All routes are prefixed with `/api/v1/`.
 
-## Documentation Site (Starlight)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/health` | Health check -- returns app and database status |
+| GET | `/api/v1/businesses` | List businesses (supports `?search=`, `?category=`, `?page=`, `?per_page=`) |
+| GET | `/api/v1/businesses/{slug}` | Get a single business by slug |
+| GET | `/api/v1/categories` | List all business categories |
 
-```bash
-cd starlight-docs
-npm install
-npm run preview
-```

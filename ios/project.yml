@@ -44,6 +44,7 @@ targets:
         CFBundleDisplayName: Sooke Community
         CFBundleShortVersionString: "0.1.0"
         UILaunchScreen: {}
+        NSLocationWhenInUseUsageDescription: "Sooke Community uses your location to show nearby businesses on the map."
 
   SookeCommunityTests:
     type: bundle.unit-test

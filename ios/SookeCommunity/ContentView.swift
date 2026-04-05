@@ -17,7 +17,7 @@ struct ContentView: View {
                 EventsPlaceholderView()
             }
             Tab(AppTab.map.title, systemImage: AppTab.map.icon, value: .map) {
-                MapPlaceholderView()
+                SookeMapView(apiClient: apiClient)
             }
         }
         .tint(themeManager.colors.primary)

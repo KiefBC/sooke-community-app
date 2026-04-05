@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import CoreLocation
 
 
 @MainActor
 @Observable
-public final class MapViewModel {
+final class MapViewModel {
+    private let locationManager = CLLocationManager()
     private let apiClient: APIClient
     var businesses: [Business] = []
     var selectedCategory: Category? = nil
@@ -49,6 +51,14 @@ public final class MapViewModel {
             self.error = error
         }
         isLoading = false
+    }
+    
+    func selectCategory(_ category: Category?) {
+        selectedCategory = category
+    }
+    
+    func requestLocationPermission() {
+        locationManager.requestWhenInUseAuthorization()
     }
     
     // TODO: implement map view model to fetch business locations and details for map annotations

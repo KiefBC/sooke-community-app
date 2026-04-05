@@ -58,7 +58,7 @@ struct BusinessDetailView: View {
                 BusinessContactSection(business: business)
 
                 // Location
-                BusinessLocationSection(address: business.address)
+                BusinessLocationSection(business: business)
 
                 Spacer(minLength: 20)
             }

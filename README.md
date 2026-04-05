@@ -33,7 +33,7 @@ cd ios
 xcodebuild test -scheme SookeCommunity -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
-Tests use the Swift Testing framework (`@Suite`, `@Test`). See `docs/swift-testing-guide.md` for patterns and conventions.
+Tests use the Swift Testing framework (`@Suite`, `@Test`).
 
 ## Environment Setup
 

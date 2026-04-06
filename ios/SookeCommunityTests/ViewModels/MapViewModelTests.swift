@@ -67,10 +67,13 @@ struct MapViewModelTests {
         let vm = MapViewModel()
         vm.apiClient = makeTestClient()
         await vm.fetchBusinesses()
+        
+        let url = MockURLProtocol.lastRequest?.url?.absoluteString
 
         #expect(vm.businesses.count == 3)
         #expect(vm.businesses[0].name == "Test Cafe")
         #expect(vm.businesses[2].categoryName == "Food")
+        #expect(url?.contains("tz=") == true)
     }
 
     @Test func fetchesCategories() async throws {
@@ -93,8 +96,11 @@ struct MapViewModelTests {
         vm.selectedCategory = Category(id: 1, name: "Food", slug: "food")
         await vm.fetchBusinesses()
         
+        let url = MockURLProtocol.lastRequest?.url?.absoluteString
+        
         #expect(vm.filteredBusinesses.count == 2)
         #expect(vm.businesses.count == 3)
+        #expect(url?.contains("tz=") == true)
     }
     
     @Test func nilCategoryShowsAllLocations() async throws {
@@ -130,9 +136,12 @@ struct MapViewModelTests {
         #expect(vm.selectedBusiness?.name == business.name)
         
         vm.selectedBusiness = nil
+        let url = MockURLProtocol.lastRequest?.url?.absoluteString
+        
         #expect(vm.selectedBusiness == nil)
         #expect(vm.businesses.count == 3)
         #expect(vm.filteredBusinesses.count == 3)
+        #expect(url?.contains("tz=") == true)
     }
     
     @Test func handlesError() async throws {

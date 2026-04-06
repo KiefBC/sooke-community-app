@@ -38,7 +38,8 @@ struct BusinessDetailViewModelTests {
     @Test func fetchesBusinessDetails() async throws {
         MockURLProtocol.reset()
         MockURLProtocol.mockResponseData = makeBusinessDetailsJSON()
-        let vm = BusinessDetailViewModel(apiClient: makeTestClient())
+        let vm = BusinessDetailViewModel()
+        vm.apiClient = makeTestClient()
         await vm.fetchBusinessDetails(slug: "test-cafe")
 
         #expect(vm.businessDetails != nil)
@@ -52,7 +53,8 @@ struct BusinessDetailViewModelTests {
         MockURLProtocol.reset()
         MockURLProtocol.mockStatusCode = 404
         MockURLProtocol.mockResponseData = makeErrorJSON()
-        let vm = BusinessDetailViewModel(apiClient: makeTestClient())
+        let vm = BusinessDetailViewModel()
+        vm.apiClient = makeTestClient()
         await vm.fetchBusinessDetails(slug: "nonexistent")
 
         #expect(vm.businessDetails == nil)
@@ -64,7 +66,8 @@ struct BusinessDetailViewModelTests {
         MockURLProtocol.reset()
         MockURLProtocol.mockStatusCode = 404
         MockURLProtocol.mockResponseData = makeErrorJSON()
-        let vm = BusinessDetailViewModel(apiClient: makeTestClient())
+        let vm = BusinessDetailViewModel()
+        vm.apiClient = makeTestClient()
         await vm.fetchBusinessDetails(slug: "nonexistent")
         #expect(vm.error != nil)
 
@@ -75,7 +78,7 @@ struct BusinessDetailViewModelTests {
     }
 
     @Test func isLoadingDefaultsToFalse() async throws {
-        let vm = BusinessDetailViewModel(apiClient: makeTestClient())
+        let vm = BusinessDetailViewModel()
         #expect(vm.isLoading == false)
         #expect(vm.businessDetails == nil)
         #expect(vm.error == nil)

@@ -15,19 +15,19 @@ type Querier interface {
 
 // Business represents a business entity in the database.
 type Business struct {
-	ID           int64        `json:"id"`
-	Name         string       `json:"name"`
-	Slug         string       `json:"slug"`
-	Description  *string      `json:"description"` // nullable
-	CategoryName string       `json:"category_name"`
-	CategorySlug string       `json:"category_slug"`
-	Address      string       `json:"address"`
-	Latitude     float64      `json:"latitude"`
-	Longitude    float64      `json:"longitude"`
-	Phone        *string      `json:"phone"`        // nullable
-	Email        *string      `json:"email"`        // nullable
-	Website      *string      `json:"website"`      // nullable
-	TodayHours   *BusinessHour `json:"today_hours"` // nullable -- only today's hours for list view
+	ID           int64         `json:"id"`
+	Name         string        `json:"name"`
+	Slug         string        `json:"slug"`
+	Description  *string       `json:"description"` // nullable
+	CategoryName string        `json:"category_name"`
+	CategorySlug string        `json:"category_slug"`
+	Address      string        `json:"address"`
+	Latitude     float64       `json:"latitude"`
+	Longitude    float64       `json:"longitude"`
+	Phone        *string       `json:"phone"`       // nullable
+	Email        *string       `json:"email"`       // nullable
+	Website      *string       `json:"website"`     // nullable
+	TodayHours   *BusinessHour `json:"today_hours"` // nullable - only today's hours for list view
 }
 
 // BusinessDetails represents a business along with its hours and menus.
@@ -63,7 +63,7 @@ type MenuItem struct {
 }
 
 // ListBusinesses retrieves a list of businesses from the database based on the provided search and category filters, along with pagination parameters. It returns the list of businesses, the total count of matching businesses (ignoring pagination), and any error encountered during the operation.
-func ListBusinesses(ctx context.Context, q Querier, search, categorySlug string, limit, offset int) ([]Business, int, error) {
+func ListBusinesses(ctx context.Context, q Querier, search, categorySlug, timeZone string, limit, offset int) ([]Business, int, error) {
 	var countTotal int
 	err := q.QueryRowContext(ctx,
 		`SELECT COUNT(*)
@@ -85,12 +85,12 @@ func ListBusinesses(ctx context.Context, q Querier, search, categorySlug string,
 		 FROM businesses b
 		 JOIN business_categories bc ON b.category_id = bc.id
 		 LEFT JOIN business_hours bh ON bh.business_id = b.id
-		     AND bh.day_of_week = EXTRACT(DOW FROM NOW())
+		     AND bh.day_of_week = EXTRACT(DOW FROM NOW() AT TIME ZONE $3)
 		 WHERE ($1 = '' OR b.name ILIKE '%' || $1 || '%')
 		     AND ($2 = '' OR bc.slug = $2)
 		 ORDER BY b.name ASC
-		 LIMIT $3 OFFSET $4`,
-		search, categorySlug, limit, offset,
+		 LIMIT $4 OFFSET $5`,
+		search, categorySlug, timeZone, limit, offset,
 	)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to query businesses: %w", err)

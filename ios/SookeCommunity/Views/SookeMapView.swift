@@ -10,6 +10,7 @@ import MapKit
 
 struct SookeMapView: View {
     @Environment(ThemeManager.self) private var themeManager
+    @Environment(\.apiClient) private var apiClient
     var sookeLocation: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 48.3725, longitude: -123.7255)
     var initialPosition: MapCameraPosition {
         .region(MKCoordinateRegion(
@@ -17,19 +18,12 @@ struct SookeMapView: View {
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         ))
     }
-    @State private var vm: MapViewModel
+    @State private var vm = MapViewModel()
     @State private var selectedMarker: Int64?
     @State var navigateToBusiness: Business?
     @State private var navigationPath = NavigationPath()
-    let apiClient: APIClient
-
-    init(apiClient: APIClient) {
-        self.apiClient = apiClient
-        self._vm = State(initialValue: MapViewModel(apiClient: apiClient))
-    }
     
     var body: some View {
-        @Bindable var vm = vm
         NavigationStack(path: $navigationPath) {
             Map(initialPosition: initialPosition, selection: $selectedMarker) {
                 ForEach(vm.filteredBusinesses) { business in
@@ -43,6 +37,7 @@ struct SookeMapView: View {
             .preferredColorScheme(ColorScheme.dark)
             .mapControlVisibility(.hidden)
             .task {
+                vm.apiClient = apiClient
                 await vm.fetchBusinesses()
                 await vm.fetchCategories()
                 vm.requestLocationPermission()
@@ -107,12 +102,8 @@ struct SookeMapView: View {
                 .presentationDetents([.height(120), .medium])
             }
             .navigationDestination(for: Business.self) { business in
-                BusinessDetailView(business: business, apiClient: apiClient)
+                BusinessDetailView(business: business)
             }
         }
     }
-}
-
-#Preview {
-    SookeMapView(apiClient: APIClient(baseURL: APIConfig.baseURL))
 }

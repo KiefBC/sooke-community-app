@@ -13,11 +13,15 @@ import CoreLocation
 @Observable
 final class MapViewModel {
     private let locationManager = CLLocationManager()
-    private let apiClient: APIClient
+    var apiClient: APIClient?
     var businesses: [Business] = []
     var selectedCategory: Category? = nil
     var selectedBusiness: Business? = nil
-    var isLoading: Bool = false
+    
+    // TODO: Still not sure if I will need these state machines but keeping in case
+    var isLoadingBusinesses: Bool = false
+    var isLoadingCategories: Bool = false
+    
     var error: Error? = nil
     var filteredBusinesses: [Business] {
         guard let category = selectedCategory else { return businesses }
@@ -25,12 +29,9 @@ final class MapViewModel {
     }
     var categories: [Category] = []
     
-    init(apiClient: APIClient) {
-        self.apiClient = apiClient
-    }
-    
     func fetchBusinesses() async {
-        isLoading = true
+        guard let apiClient else { return }
+        isLoadingBusinesses = true
         error = nil
         do {
             let response: PaginatedResponse<Business> = try await apiClient.get("/api/v1/businesses")
@@ -38,11 +39,12 @@ final class MapViewModel {
         } catch {
             self.error = error
         }
-        isLoading = false
+        isLoadingBusinesses = false
     }
     
     func fetchCategories() async {
-        isLoading = true
+        guard let apiClient else { return }
+        isLoadingCategories = true
         error = nil
         do {
             let response: CategoryListResponse = try await apiClient.get("/api/v1/categories")
@@ -50,7 +52,7 @@ final class MapViewModel {
         } catch {
             self.error = error
         }
-        isLoading = false
+        isLoadingCategories = false
     }
     
     func selectCategory(_ category: Category?) {

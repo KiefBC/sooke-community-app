@@ -135,11 +135,13 @@ struct BusinessListViewModelTests {
         await vm.fetchBusinesses()
         
         let url = MockURLProtocol.lastRequest?.url?.absoluteString
+        print("Requested URL: \(url ?? "nil")")
         
         #expect(vm.items.count == 1)
         #expect(vm.items.first?.name == "Test Cafe")
         #expect(vm.isLoading == false)
         #expect(url?.contains("search=Cafe") == true)
+        #expect(url?.contains("tz=") == true)
     }
     
     @Test func filtersByCategory() async   {
@@ -156,6 +158,7 @@ struct BusinessListViewModelTests {
         #expect(vm.items.first?.name == "Test Cafe")
         #expect(vm.isLoading == false)
         #expect(url?.contains("category=food") == true)
+        #expect(url?.contains("tz=") == true)
     }
 
     @Test func selectCategoryFiltersBusinesses() async throws {
@@ -174,6 +177,7 @@ struct BusinessListViewModelTests {
         #expect(vm.items.first?.name == "Test Cafe")
         #expect(vm.isLoading == false)
         #expect(url?.contains("category=food") == true)
+        #expect(url?.contains("tz=") == true)
     }
     
     @Test func clearingCategoryFetchesAll() async throws {
@@ -200,6 +204,7 @@ struct BusinessListViewModelTests {
         #expect(vm.items.first?.name == "Test Retail")
         #expect(vm.isLoading == false)
         #expect(url?.contains("category=") == false)
+        #expect(url?.contains("tz=") == true)
     }
     
     @Test func isLoadingDefaultsToFalse() async throws {

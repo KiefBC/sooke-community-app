@@ -16,6 +16,7 @@ final class APIClient: Sendable {
     }
 
     func get<T: Codable & Sendable>(_ path: String, queryItems: [URLQueryItem] = []) async throws -> T {
+        // Construct the full URL with query parameters
         guard var components = URLComponents(string: baseURL + path) else {
             throw APIError.invalidURL
         }
@@ -33,10 +34,12 @@ final class APIClient: Sendable {
 
         let (data, response) = try await session.data(for: request)
 
+        // Ensure the response is an HTTPURLResponse
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidURL
         }
 
+        // Check for HTTP errors
         guard (200...299).contains(httpResponse.statusCode) else {
             let errorResponse = try? JSONDecoder().decode(APIErrorResponse.self, from: data)
             throw APIError.httpError(statusCode: httpResponse.statusCode, response: errorResponse)

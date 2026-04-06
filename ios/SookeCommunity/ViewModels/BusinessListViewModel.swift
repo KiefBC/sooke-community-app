@@ -15,6 +15,7 @@ final class BusinessListViewModel {
     var categories: [Category] = []
     var selectedCategory: Category? = nil
     var searchText: String = ""
+    var timeZone: TimeZone = .current
     private(set) var isLoadingBusinesses: Bool = false
     private(set) var isLoadingCategories: Bool = false
     var error: Error? = nil
@@ -34,6 +35,9 @@ final class BusinessListViewModel {
         if let category = selectedCategory {
             queryItems.append(URLQueryItem(name: "category", value: category.slug))
         }
+        
+        queryItems.append(URLQueryItem(name: "timezone", value: timeZone.identifier))
+        
         do {
             let response: PaginatedResponse<Business> = try await apiClient.get("/api/v1/businesses", queryItems: queryItems)
             items = response.items

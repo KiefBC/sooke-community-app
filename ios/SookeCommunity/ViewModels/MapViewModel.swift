@@ -22,6 +22,7 @@ final class MapViewModel {
     var isLoadingBusinesses: Bool = false
     var isLoadingCategories: Bool = false
     
+    var timeZone: TimeZone = .current
     var error: Error? = nil
     var filteredBusinesses: [Business] {
         guard let category = selectedCategory else { return businesses }
@@ -33,8 +34,12 @@ final class MapViewModel {
         guard let apiClient else { return }
         isLoadingBusinesses = true
         error = nil
+        
+        var queryItems: [URLQueryItem] = []
+        queryItems.append(URLQueryItem(name: "timezone", value: timeZone.identifier))
+        
         do {
-            let response: PaginatedResponse<Business> = try await apiClient.get("/api/v1/businesses")
+            let response: PaginatedResponse<Business> = try await apiClient.get("/api/v1/businesses", queryItems: queryItems)
             businesses = response.items
         } catch {
             self.error = error

@@ -2,14 +2,6 @@ import Testing
 import Foundation
 @testable import SookeCommunity
 
-// makeTestClient creates an APIClient backed by MockURLProtocol for isolation.
-func makeTestClient() -> APIClient {
-    let config = URLSessionConfiguration.ephemeral
-    config.protocolClasses = [MockURLProtocol.self]
-    let session = URLSession(configuration: config)
-    return APIClient(baseURL: "http://localhost:8080", session: session)
-}
-
 @Suite("APIClient Tests")
 struct APIClientTests {
 

@@ -40,6 +40,14 @@ func ListBusinessesHandler(db repository.Querier) http.HandlerFunc {
 		search := r.URL.Query().Get("search")
 		category := r.URL.Query().Get("category")
 
+		timeZone := r.URL.Query().Get("tz")
+		if timeZone == "" {
+			timeZone = "America/Vancouver"
+		} else if _, err := time.LoadLocation(timeZone); err != nil {
+			WriteError(w, http.StatusBadRequest, "invalid_parameter", "Invalid time zone")
+			return
+		}
+
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 		if page < 1 {
 			page = 1
@@ -52,7 +60,7 @@ func ListBusinessesHandler(db repository.Querier) http.HandlerFunc {
 
 		offset := (page - 1) * perPage
 
-		businesses, total, err := repository.ListBusinesses(ctx, db, search, category, perPage, offset)
+		businesses, total, err := repository.ListBusinesses(ctx, db, search, category, timeZone, perPage, offset)
 		if err != nil {
 			WriteError(w, http.StatusInternalServerError, "internal_error", "Failed to list businesses")
 			return

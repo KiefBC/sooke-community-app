@@ -10,11 +10,12 @@ import Foundation
 @MainActor
 @Observable
 final class BusinessListViewModel {
-    private let apiClient: APIClient
+    var apiClient: APIClient?
     var items: [Business] = []
     var categories: [Category] = []
     var selectedCategory: Category? = nil
     var searchText: String = ""
+    var timeZone: TimeZone = .current
     private(set) var isLoadingBusinesses: Bool = false
     private(set) var isLoadingCategories: Bool = false
     var error: Error? = nil
@@ -23,11 +24,8 @@ final class BusinessListViewModel {
         isLoadingBusinesses || isLoadingCategories
     }
 
-    init(apiClient: APIClient) {
-        self.apiClient = apiClient
-    }
-
     func fetchBusinesses() async {
+        guard let apiClient else { return }
         isLoadingBusinesses = true
         error = nil
         var queryItems: [URLQueryItem] = []
@@ -37,6 +35,9 @@ final class BusinessListViewModel {
         if let category = selectedCategory {
             queryItems.append(URLQueryItem(name: "category", value: category.slug))
         }
+        
+        queryItems.append(URLQueryItem(name: "tz", value: timeZone.identifier))
+        
         do {
             let response: PaginatedResponse<Business> = try await apiClient.get("/api/v1/businesses", queryItems: queryItems)
             items = response.items
@@ -47,6 +48,7 @@ final class BusinessListViewModel {
     }
 
     func fetchCategories() async {
+        guard let apiClient else { return }
         isLoadingCategories = true
         error = nil
         do {

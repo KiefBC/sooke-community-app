@@ -10,12 +10,7 @@ import SwiftUI
 struct BusinessCardView: View {
     @Environment(ThemeManager.self) private var themeManager
     let business: Business
-    let details: BusinessDetails?
 
-    init(business: Business, details: BusinessDetails? = nil) {
-        self.business = business
-        self.details = details
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -67,7 +62,7 @@ struct BusinessCardView: View {
     }
 
     private var currentHoursStatus: HoursStatus {
-        details?.hoursStatus() ?? business.hoursStatus()
+        business.hoursStatus()
     }
 
     @ViewBuilder
@@ -99,25 +94,3 @@ struct BusinessCardView: View {
     }
 }
 
-#Preview {
-    let sampleBusiness = Business(
-        id: 1,
-        name: "The Sooke Harbour House",
-        slug: "sooke-harbour-house",
-        description: "Fine dining with ocean views",
-        categoryName: "Restaurant",
-        categorySlug: "restaurant",
-        address: "6971 West Coast Rd, Sooke, BC",
-        latitude: 48.3754,
-        longitude: -123.7322,
-        phone: "(250) 642-3421",
-        email: "info@sookeharbourhouse.com",
-        website: "https://sookeharbourhouse.com",
-        todayHours: BusinessHour(dayOfWeek: 3, openTime: "09:00:00", closeTime: "17:00:00", isClosed: false)
-    )
-
-    BusinessCardView(business: sampleBusiness)
-        .frame(width: 300)
-        .padding()
-        .environment(ThemeManager())
-}

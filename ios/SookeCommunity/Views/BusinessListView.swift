@@ -9,16 +9,10 @@ import SwiftUI
 
 struct BusinessListView: View {
     @Environment(ThemeManager.self) private var themeManager
-    let apiClient: APIClient
-    @State private var vm: BusinessListViewModel
-
-    init(apiClient: APIClient) {
-        self.apiClient = apiClient
-        self._vm = State(initialValue: BusinessListViewModel(apiClient: apiClient))
-    }
+    @Environment(\.apiClient) private var apiClient
+    @State private var vm = BusinessListViewModel()
 
     var body: some View {
-        @Bindable var vm = vm
         NavigationStack {
             List {
                 ForEach(vm.items) { item in
@@ -31,14 +25,13 @@ struct BusinessListView: View {
             }
             .searchable(text: $vm.searchText, prompt: "Search Businesses")
             .task(id: vm.searchText) {
+                vm.apiClient = apiClient
                 if !vm.searchText.isEmpty {
                     do {
                         try await Task.sleep(for: .milliseconds(300))
                     } catch { return }
                 }
                 await vm.fetchBusinesses()
-            }
-            .task {
                 await vm.fetchCategories()
             }
             .onChange(of: vm.selectedCategory) {
@@ -46,7 +39,7 @@ struct BusinessListView: View {
             }
             .scrollContentBackground(.hidden)
             .navigationDestination(for: Business.self) { business in
-                BusinessDetailView(business: business, apiClient: apiClient)
+                BusinessDetailView(business: business)
             }
             .safeAreaInset(edge: .top) {
                 ScrollView(.horizontal, showsIndicators: false) {

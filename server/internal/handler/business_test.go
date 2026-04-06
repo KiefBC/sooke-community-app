@@ -39,12 +39,66 @@ const businessSeed = `
 	INSERT INTO menu_items (menu_id, name, price) VALUES ((SELECT id FROM menus WHERE name = 'Dinner'), 'Fish and Chips', '12.99');
 `
 
+func TestTimeZoneValidation(t *testing.T) {
+	tests := []struct {
+		name        string
+		url         string
+		wantStatus  int
+		wantErrCode string
+	}{
+		{
+			name:        "valid time zone returns 200",
+			url:         "/api/v1/businesses?tz=America%2FVancouver",
+			wantStatus:  http.StatusOK,
+			wantErrCode: "",
+		},
+		{
+			name:        "invalid time zone returns 400 with error JSON",
+			url:         "/api/v1/businesses?tz=Invalid%2FZone",
+			wantStatus:  http.StatusBadRequest,
+			wantErrCode: "invalid_parameter",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx, err := testDB.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin transaction: %v", err)
+			}
+			defer tx.Rollback()
+
+			h := handler.ListBusinessesHandler(tx)
+			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
+			rec := httptest.NewRecorder()
+			h(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("status = %d, want %d", rec.Code, tt.wantStatus)
+			}
+
+			if tt.wantErrCode != "" {
+				var body handler.ErrorResponse
+				if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+					t.Fatalf("failed to decode error response: %v", err)
+				}
+				if body.Error.Code != tt.wantErrCode {
+					t.Errorf("error code = %q, want %q", body.Error.Code, tt.wantErrCode)
+				}
+				if body.Error.Message == "" {
+					t.Error("error message is empty")
+				}
+			}
+		})
+	}
+}
+
 func TestListBusinesses(t *testing.T) {
 	tests := []struct {
-		name           string
-		url            string
-		wantStatus     int
-		wantMinItems   int
+		name            string
+		url             string
+		wantStatus      int
+		wantMinItems    int
 		wantContentType string
 	}{
 		{
@@ -70,7 +124,7 @@ func TestListBusinesses(t *testing.T) {
 		},
 		{
 			name:            "today_hours included for business with hours",
-			url:             "/api/v1/businesses?search=harbour",
+			url:             "/api/v1/businesses?search=harbour&tz=America%2FVancouver",
 			wantStatus:      http.StatusOK,
 			wantMinItems:    1,
 			wantContentType: "application/json",

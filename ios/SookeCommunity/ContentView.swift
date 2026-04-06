@@ -11,13 +11,13 @@ struct ContentView: View {
                 HomeView()
             }
             Tab(AppTab.businesses.title, systemImage: AppTab.businesses.icon, value: .businesses) {
-                BusinessListView(apiClient: apiClient)
+                BusinessListView()
             }
             Tab(AppTab.events.title, systemImage: AppTab.events.icon, value: .events) {
                 EventsPlaceholderView()
             }
             Tab(AppTab.map.title, systemImage: AppTab.map.icon, value: .map) {
-                SookeMapView(apiClient: apiClient)
+                SookeMapView()
             }
         }
         .tint(themeManager.colors.primary)

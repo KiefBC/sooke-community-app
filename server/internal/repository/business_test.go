@@ -137,12 +137,12 @@ func TestListBusinessesTodayHours(t *testing.T) {
 `
 
 	tests := []struct {
-		name           string
-		search         string
-		wantSlug       string
-		wantHasHours   bool
-		wantIsClosed   bool
-		wantOpenTime   string
+		name         string
+		search       string
+		wantSlug     string
+		wantHasHours bool
+		wantIsClosed bool
+		wantOpenTime string
 	}{
 		{
 			name:         "business with hours today has TodayHours populated",
@@ -186,7 +186,7 @@ func TestListBusinessesTodayHours(t *testing.T) {
 				t.Fatalf("setup failed: %v", err)
 			}
 
-			businesses, _, err := repository.ListBusinesses(context.Background(), tx, tt.search, "", 20, 0)
+			businesses, _, err := repository.ListBusinesses(context.Background(), tx, tt.search, "", "America/Vancouver", 20, 0)
 			if err != nil {
 				t.Fatalf("ListBusinesses returned error: %v", err)
 			}
@@ -332,7 +332,7 @@ func TestListBusinesses(t *testing.T) {
 				t.Fatalf("setup failed: %v", err)
 			}
 
-			businesses, total, err := repository.ListBusinesses(context.Background(), tx, tt.search, tt.category, tt.limit, tt.offset)
+			businesses, total, err := repository.ListBusinesses(context.Background(), tx, tt.search, tt.category, "America/Vancouver", tt.limit, tt.offset)
 			if err != nil {
 				t.Fatalf("ListBusinesses returned error: %v", err)
 			}

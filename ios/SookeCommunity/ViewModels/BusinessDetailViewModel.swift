@@ -10,16 +10,13 @@ import Foundation
 @MainActor
 @Observable
 final class BusinessDetailViewModel {
-    private let apiClient: APIClient
+    var apiClient: APIClient?
     private(set) var businessDetails: BusinessDetails?
     private(set) var isLoading = false
     private(set) var error: Error?
 
-    init(apiClient: APIClient) {
-        self.apiClient = apiClient
-    }
-
     func fetchBusinessDetails(slug: String) async {
+        guard let apiClient else { return }
         isLoading = true
         error = nil
 

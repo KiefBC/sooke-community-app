@@ -63,7 +63,7 @@ type MenuItem struct {
 }
 
 // ListBusinesses retrieves a list of businesses from the database based on the provided search and category filters, along with pagination parameters. It returns the list of businesses, the total count of matching businesses (ignoring pagination), and any error encountered during the operation.
-func ListBusinesses(ctx context.Context, q Querier, search, categorySlug, timeZone string, limit, offset int) ([]Business, int, error) {
+func ListBusinesses(ctx context.Context, q Querier, search, categorySlug, tz string, limit, offset int) ([]Business, int, error) {
 	var countTotal int
 	err := q.QueryRowContext(ctx,
 		`SELECT COUNT(*)
@@ -90,7 +90,7 @@ func ListBusinesses(ctx context.Context, q Querier, search, categorySlug, timeZo
 		     AND ($2 = '' OR bc.slug = $2)
 		 ORDER BY b.name ASC
 		 LIMIT $4 OFFSET $5`,
-		search, categorySlug, timeZone, limit, offset,
+		search, categorySlug, tz, limit, offset,
 	)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to query businesses: %w", err)

@@ -10,14 +10,9 @@ struct BusinessDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // TODO: Do we want this Card?
-                if let details = vm.businessDetails {
-                    BusinessCardView(business: business, details: details)
-                        .padding(.horizontal)
-                } else {
-                    BusinessCardView(business: business)
-                        .padding(.horizontal)
-                }
-
+                BusinessCardView(business: business)
+                    .padding(.horizontal)
+                
                 // Description
                 if let description = business.description, !description.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
@@ -42,9 +37,7 @@ struct BusinessDetailView: View {
                 }
 
                 // Menus
-                if let details = vm.businessDetails, !details.menus.isEmpty {
-                    BusinessMenusSection(menus: details.menus)
-                }
+                BusinessMenusSection(menus: vm.businessDetails?.menus ?? [])
 
                 // Contact
                 BusinessContactSection(business: business)

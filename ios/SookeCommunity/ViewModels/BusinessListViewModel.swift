@@ -36,7 +36,7 @@ final class BusinessListViewModel {
             queryItems.append(URLQueryItem(name: "category", value: category.slug))
         }
         
-        queryItems.append(URLQueryItem(name: "timezone", value: timeZone.identifier))
+        queryItems.append(URLQueryItem(name: "tz", value: timeZone.identifier))
         
         do {
             let response: PaginatedResponse<Business> = try await apiClient.get("/api/v1/businesses", queryItems: queryItems)

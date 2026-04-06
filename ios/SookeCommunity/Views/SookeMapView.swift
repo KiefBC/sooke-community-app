@@ -11,7 +11,10 @@ import MapKit
 struct SookeMapView: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(\.apiClient) private var apiClient
-    var sookeLocation: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 48.3725, longitude: -123.7255)
+    var sookeLocation: CLLocationCoordinate2D = CLLocationCoordinate2D(
+        latitude: 48.3725,
+        longitude: -123.7255
+    )
     var initialPosition: MapCameraPosition {
         .region(MKCoordinateRegion(
             center: sookeLocation,
@@ -20,19 +23,51 @@ struct SookeMapView: View {
     }
     @State private var vm = MapViewModel()
     @State private var selectedMarker: Int64?
-    @State var navigateToBusiness: Business?
     @State private var navigationPath = NavigationPath()
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
             Map(initialPosition: initialPosition, selection: $selectedMarker) {
                 ForEach(vm.filteredBusinesses) { business in
-                    let businessLocation = CLLocationCoordinate2D(latitude: business.latitude, longitude: business.longitude)
+                    let businessLocation = CLLocationCoordinate2D(
+                        latitude: business.latitude,
+                        longitude: business.longitude
+                    )
                     Marker(business.name, coordinate: businessLocation)
                         .tag(business.id)
                         .tint(.red)
                 }
                 UserAnnotation()
+            }
+            // TODO: Or do we want a retry button here? toast notification?
+            .alert(
+                "Error Loading Map",
+                isPresented: .constant(vm.error != nil)
+            ) {
+                Button("OK") {
+                    // Dismiss
+                }
+            }
+            .overlay(alignment: .top) {
+                if vm.error != nil {
+                    HStack {
+                        Image(systemName: "wifi.slash")
+                        Text("Couldn't load businesses")
+                        Spacer()
+                        Button("Retry") {
+                            Task {
+                                await vm.fetchBusinesses()
+                            }
+                        }
+                        .fontWeight(.semibold)
+                    }
+                    .font(.subheadline)
+                    .padding()
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding()
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
             .preferredColorScheme(ColorScheme.dark)
             .mapControlVisibility(.hidden)
@@ -44,7 +79,8 @@ struct SookeMapView: View {
             }
             .onChange(of: selectedMarker) {
                 guard let id = selectedMarker else { return }
-                vm.selectedBusiness = vm.filteredBusinesses.first { $0.id == id }
+                vm.selectedBusiness = vm.filteredBusinesses
+                    .first { $0.id == id }
             }
             .onChange(of: vm.selectedBusiness) {
                 withAnimation {
@@ -62,11 +98,16 @@ struct SookeMapView: View {
                                     .font(.subheadline)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
-                                    .foregroundColor(vm.selectedCategory == nil ? .white : themeManager.colors.accent)
+                                    .foregroundColor(
+                                        vm.selectedCategory == nil ? .white : themeManager.colors.accent
+                                    )
                             }
                             .buttonStyle(.plain)
                             .glassEffect(
-                                vm.selectedCategory == nil ? .regular.tint(themeManager.colors.accent).interactive() : .regular.interactive(),
+                                vm.selectedCategory == nil ? .regular
+                                    .tint(themeManager.colors.accent)
+                                    .interactive() : .regular
+                                    .interactive(),
                                 in: .capsule
                             )
                             ForEach(vm.categories) { cat in
@@ -78,11 +119,16 @@ struct SookeMapView: View {
                                         .font(.subheadline)
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 6)
-                                        .foregroundColor(isSelected ? .white : themeManager.colors.accent)
+                                        .foregroundColor(
+                                            isSelected ? .white : themeManager.colors.accent
+                                        )
                                 }
                                 .buttonStyle(.plain)
                                 .glassEffect(
-                                    isSelected ? .regular.tint(themeManager.colors.accent).interactive() : .regular.interactive(),
+                                    isSelected ? .regular
+                                        .tint(themeManager.colors.accent)
+                                        .interactive() : .regular
+                                        .interactive(),
                                     in: .capsule
                                 )
                             }

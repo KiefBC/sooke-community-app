@@ -1,43 +1,16 @@
 package handler_test
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kiefbc/sooke_app/server/internal/handler"
 	"github.com/kiefbc/sooke_app/server/internal/repository"
-	"github.com/kiefbc/sooke_app/server/internal/testdb"
+	"github.com/kiefbc/sooke_app/server/internal/testdb/seeds"
 )
-
-var testDB *sql.DB
-
-func TestMain(m *testing.M) {
-	testDB = testdb.Open()
-	if testDB == nil {
-		os.Exit(0)
-	}
-	os.Exit(m.Run())
-}
-
-const businessSeed = `
-	INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant'), ('Cafe', 'cafe') ON CONFLICT DO NOTHING;
-	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Sooke Harbour House', 'sooke-harbour-house', '1528 Whiffen Spit Rd', 48.3538, -123.7256);
-	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-		VALUES ((SELECT id FROM business_categories WHERE slug = 'cafe'), 'Moms Cafe', 'moms-cafe', '2036 Shields Rd', 48.3761, -123.7254);
-	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
-		VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 1, '09:00', '17:00', false);
-	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
-		VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), EXTRACT(DOW FROM NOW())::int, '09:00', '17:00', false)
-		ON CONFLICT (business_id, day_of_week) DO NOTHING;
-	INSERT INTO menus (business_id, name) VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 'Dinner');
-	INSERT INTO menu_items (menu_id, name, price) VALUES ((SELECT id FROM menus WHERE name = 'Dinner'), 'Fish and Chips', '12.99');
-`
 
 func TestTimeZoneValidation(t *testing.T) {
 	tests := []struct {
@@ -139,9 +112,7 @@ func TestListBusinesses(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			if _, err := tx.Exec(businessSeed); err != nil {
-				t.Fatalf("seed failed: %v", err)
-			}
+			seeds.BusinessSeed(tx)
 
 			h := handler.ListBusinessesHandler(tx)
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
@@ -230,9 +201,7 @@ func TestGetBusiness(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			if _, err := tx.Exec(businessSeed); err != nil {
-				t.Fatalf("seed failed: %v", err)
-			}
+			seeds.BusinessSeed(tx)
 
 			h := handler.GetBusinessHandler(tx)
 
@@ -290,10 +259,6 @@ func TestGetBusiness(t *testing.T) {
 }
 
 func TestGetCategories(t *testing.T) {
-	const categorySeed = `
-		INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant'), ('Cafe', 'cafe') ON CONFLICT DO NOTHING;
-	`
-
 	tests := []struct {
 		name            string
 		wantStatus      int
@@ -316,9 +281,7 @@ func TestGetCategories(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			if _, err := tx.Exec(categorySeed); err != nil {
-				t.Fatalf("seed failed: %v", err)
-			}
+			seeds.CategorySeed(tx)
 
 			h := handler.ListCategoriesHandler(tx)
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/categories", nil)

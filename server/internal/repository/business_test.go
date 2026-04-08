@@ -2,38 +2,13 @@ package repository_test
 
 import (
 	"context"
-	"database/sql"
-	"os"
 	"testing"
 
 	"github.com/kiefbc/sooke_app/server/internal/repository"
-	"github.com/kiefbc/sooke_app/server/internal/testdb"
+	"github.com/kiefbc/sooke_app/server/internal/testdb/seeds"
 )
 
-var testDB *sql.DB
-
-func TestMain(m *testing.M) {
-	testDB = testdb.Open()
-	if testDB == nil {
-		os.Exit(0)
-	}
-	os.Exit(m.Run())
-}
-
 func TestGetBusinessBySlug(t *testing.T) {
-	const setup = `
-		INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant') ON CONFLICT DO NOTHING;
-		INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-						VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Sooke Harbour House', 'sooke-harbour-house', '1528 Whiffen Spit Rd', 48.3538, -123.7256);
-		INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
-						VALUES
-								((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 3, '09:00', '17:00', false),
-								((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 1, '09:00', '17:00', false),
-								((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 2, '09:00', '17:00', false);
-		INSERT INTO menus (business_id, name) VALUES ((SELECT id FROM businesses WHERE slug = 'sooke-harbour-house'), 'Dinner');
-		INSERT INTO menu_items (menu_id, name, price) VALUES ((SELECT id FROM menus WHERE name = 'Dinner'), 'Fish and Chips', '12.99');
-	`
-
 	tests := []struct {
 		name      string
 		slug      string
@@ -48,9 +23,9 @@ func TestGetBusinessBySlug(t *testing.T) {
 			slug:      "sooke-harbour-house",
 			wantNil:   false,
 			wantName:  "Sooke Harbour House",
-			wantHours: 3,
+			wantHours: 7,
 			wantMenus: 1,
-			wantItems: 1,
+			wantItems: 3,
 		},
 		{
 			name:      "nonexistent business returns nil",
@@ -71,9 +46,7 @@ func TestGetBusinessBySlug(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			if _, err := tx.Exec(setup); err != nil {
-				t.Fatalf("setup failed: %v", err)
-			}
+			seeds.BusinessSeed(tx)
 
 			business, err := repository.GetBusinessBySlug(context.Background(), tx, tt.slug)
 			if err != nil {
@@ -117,24 +90,24 @@ func TestGetBusinessBySlug(t *testing.T) {
 }
 
 func TestListBusinessesTodayHours(t *testing.T) {
-	// Uses EXTRACT(DOW FROM NOW()) so the inserted hours match "today" regardless of when tests run
-	const setup = `
-	INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant') ON CONFLICT DO NOTHING;
-	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Has Hours Today', 'has-hours-today', '1 Main St', 48.35, -123.72);
-	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
-		VALUES ((SELECT id FROM businesses WHERE slug = 'has-hours-today'), EXTRACT(DOW FROM NOW())::int, '09:00', '17:00', false);
-	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'No Hours', 'no-hours', '2 Main St', 48.35, -123.72);
-	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Wrong Day Only', 'wrong-day-only', '3 Main St', 48.35, -123.72);
-	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
-		VALUES ((SELECT id FROM businesses WHERE slug = 'wrong-day-only'), (EXTRACT(DOW FROM NOW())::int + 1) % 7, '10:00', '18:00', false);
-	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Closed Today', 'closed-today', '4 Main St', 48.35, -123.72);
-	INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
-		VALUES ((SELECT id FROM businesses WHERE slug = 'closed-today'), EXTRACT(DOW FROM NOW())::int, '09:00', '17:00', true);
-`
+	// Edge-case businesses layered on top of the master seed.
+	// Uses EXTRACT(DOW FROM NOW()) so the inserted hours match "today" regardless of when tests run.
+	const edgeCases = `
+		INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+			VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Has Hours Today', 'has-hours-today', '1 Main St', 48.35, -123.72);
+		INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
+			VALUES ((SELECT id FROM businesses WHERE slug = 'has-hours-today'), EXTRACT(DOW FROM NOW())::int, '09:00', '17:00', false);
+		INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+			VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'No Hours', 'no-hours', '2 Main St', 48.35, -123.72);
+		INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+			VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Wrong Day Only', 'wrong-day-only', '3 Main St', 48.35, -123.72);
+		INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
+			VALUES ((SELECT id FROM businesses WHERE slug = 'wrong-day-only'), (EXTRACT(DOW FROM NOW())::int + 1) % 7, '10:00', '18:00', false);
+		INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
+			VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Closed Today', 'closed-today', '4 Main St', 48.35, -123.72);
+		INSERT INTO business_hours (business_id, day_of_week, open_time, close_time, is_closed)
+			VALUES ((SELECT id FROM businesses WHERE slug = 'closed-today'), EXTRACT(DOW FROM NOW())::int, '09:00', '17:00', true);
+	`
 
 	tests := []struct {
 		name         string
@@ -182,8 +155,9 @@ func TestListBusinessesTodayHours(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			if _, err := tx.Exec(setup); err != nil {
-				t.Fatalf("setup failed: %v", err)
+			seeds.BusinessSeed(tx)
+			if _, err := tx.Exec(edgeCases); err != nil {
+				t.Fatalf("edge-case setup failed: %v", err)
 			}
 
 			businesses, _, err := repository.ListBusinesses(context.Background(), tx, tt.search, "", "America/Vancouver", 20, 0)
@@ -220,14 +194,6 @@ func TestListBusinessesTodayHours(t *testing.T) {
 }
 
 func TestListBusinesses(t *testing.T) {
-	const setup = `
-	INSERT INTO business_categories (name, slug) VALUES ('Restaurant', 'restaurant') ON CONFLICT DO NOTHING;
-	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Sooke Harbour House', 'sooke-harbour-house', '1528 Whiffen Spit Rd', 48.3538, -123.7256);
-	INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
-		VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Moms Cafe', 'moms-cafe', '2036 Shields Rd', 48.3761, -123.7254);
-`
-
 	tests := []struct {
 		name      string
 		search    string
@@ -243,8 +209,8 @@ func TestListBusinesses(t *testing.T) {
 			category:  "",
 			limit:     20,
 			offset:    0,
-			wantCount: 2,
-			wantTotal: 2,
+			wantCount: 5,
+			wantTotal: 5,
 		},
 		{
 			name:      "search by name returns matching business",
@@ -270,13 +236,13 @@ func TestListBusinesses(t *testing.T) {
 			category:  "restaurant",
 			limit:     20,
 			offset:    0,
-			wantCount: 2,
-			wantTotal: 2,
+			wantCount: 1,
+			wantTotal: 1,
 		},
 		{
 			name:      "search and filter together",
 			search:    "Cafe",
-			category:  "restaurant",
+			category:  "cafe",
 			limit:     20,
 			offset:    0,
 			wantCount: 1,
@@ -292,22 +258,22 @@ func TestListBusinesses(t *testing.T) {
 			wantTotal: 0,
 		},
 		{
-			name:      "pagination page 1 with 2 per page",
+			name:      "pagination first page",
 			search:    "",
 			category:  "",
-			limit:     2,
+			limit:     3,
 			offset:    0,
-			wantCount: 2,
-			wantTotal: 2,
+			wantCount: 3,
+			wantTotal: 5,
 		},
 		{
-			name:      "pagination page 2 with 1 per page",
+			name:      "pagination second page",
 			search:    "",
 			category:  "",
-			limit:     1,
-			offset:    1,
-			wantCount: 1,
-			wantTotal: 2,
+			limit:     3,
+			offset:    3,
+			wantCount: 2,
+			wantTotal: 5,
 		},
 		{
 			name:      "pagination with invalid offset returns no businesses",
@@ -316,7 +282,7 @@ func TestListBusinesses(t *testing.T) {
 			limit:     20,
 			offset:    100,
 			wantCount: 0,
-			wantTotal: 2,
+			wantTotal: 5,
 		},
 	}
 
@@ -328,9 +294,7 @@ func TestListBusinesses(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			if _, err := tx.Exec(setup); err != nil {
-				t.Fatalf("setup failed: %v", err)
-			}
+			seeds.BusinessSeed(tx)
 
 			businesses, total, err := repository.ListBusinesses(context.Background(), tx, tt.search, tt.category, "America/Vancouver", tt.limit, tt.offset)
 			if err != nil {

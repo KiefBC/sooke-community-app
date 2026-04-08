@@ -16,50 +16,49 @@ type Querier interface {
 // Business represents a business entity in the database.
 type Business struct {
 	ID           int64         `json:"id"`
-	Name         string        `json:"name"`
-	Slug         string        `json:"slug"`
-	Description  *string       `json:"description"` // nullable
-	CategoryName string        `json:"category_name"`
-	CategorySlug string        `json:"category_slug"`
-	Address      string        `json:"address"`
-	Latitude     float64       `json:"latitude"`
-	Longitude    float64       `json:"longitude"`
-	Phone        *string       `json:"phone"`       // nullable
-	Email        *string       `json:"email"`       // nullable
-	Website      *string       `json:"website"`     // nullable
-	TodayHours   *BusinessHour `json:"today_hours"` // nullable - only today's hours for list view
+	Name         string        `json:"name"`          // Business name
+	Slug         string        `json:"slug"`          // URL-friendly identifier derived from the name
+	Description  *string       `json:"description"`   // Business description, nullable
+	CategoryName string        `json:"category_name"` // Name of the category this business belongs to
+	CategorySlug string        `json:"category_slug"` // Slug of the category this business belongs to
+	Address      string        `json:"address"`       // Street address of the business
+	Latitude     float64       `json:"latitude"`      // Geographic latitude of the business location
+	Longitude    float64       `json:"longitude"`     // Geographic longitude of the business location
+	Phone        *string       `json:"phone"`         // Business phone number, nullable
+	Email        *string       `json:"email"`         // Business email address, nullable
+	Website      *string       `json:"website"`       // Business website URL, nullable
+	TodayHours   *BusinessHour `json:"today_hours"`   // Operating hours for the current day, nullable (if no hours are defined for today)
 }
 
 // BusinessDetails represents a business along with its hours and menus.
 type BusinessDetails struct {
-	Business
-	Hours []BusinessHour `json:"hours"`
-	Menus []Menu         `json:"menus"`
+	Business                // Embedding the Business struct to include all its fields
+	Hours    []BusinessHour `json:"hours"` // Operating hours for each day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+	Menus    []Menu         `json:"menus"` // Menus associated with the business, each containing multiple menu items
 }
 
 // BusinessHour represents the operating hours for a business on a specific day of the week.
 type BusinessHour struct {
 	DayOfWeek int    `json:"day_of_week"` // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-	OpenTime  string `json:"open_time"`   // Format: "HH:MM:SS"
-	CloseTime string `json:"close_time"`  // Format: "HH:MM:SS"
+	OpenTime  string `json:"open_time"`   // What time a business opens at, Format: "HH:MM:SS"
+	CloseTime string `json:"close_time"`  // What time a business closes at, Format: "HH:MM:SS"
 	IsClosed  bool   `json:"is_closed"`   // Indicates if the business is closed on this day
 }
 
 // Menu represents a menu associated with a business, containing multiple menu items.
 type Menu struct {
 	ID          int64      `json:"id"`
-	Name        string     `json:"name"`
-	Description *string    `json:"description"` // nullable
-	Items       []MenuItem `json:"items"`
+	Name        string     `json:"name"`        // Name of the menu (e.g., "Lunch Menu", "Dinner Menu")
+	Description *string    `json:"description"` // Description of the menu, nullable
+	Items       []MenuItem `json:"items"`       // List of items on the menu
 }
 
 // MenuItem represents an individual item on a menu, including its name, description, and price.
 type MenuItem struct {
 	ID          int64   `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"` // nullable
-	// The database stores price as NUMERIC(10,2). The pgx driver returns this as a string (`"12.99"`). Converting to `float64` introduces rounding
-	Price string `json:"price"`
+	Name        string  `json:"name"`        // Name of the menu item (e.g., "Cheeseburger", "Caesar Salad")
+	Description *string `json:"description"` // Description of the menu item, nullable
+	Price       string  `json:"price"`       // Price of the menu item, stored as a string to preserve formatting (e.g., "9.99")
 }
 
 // ListBusinesses retrieves a list of businesses from the database based on the provided search and category filters, along with pagination parameters. It returns the list of businesses, the total count of matching businesses (ignoring pagination), and any error encountered during the operation.

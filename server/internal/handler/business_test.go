@@ -1,29 +1,16 @@
 package handler_test
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kiefbc/sooke_app/server/internal/handler"
 	"github.com/kiefbc/sooke_app/server/internal/repository"
-	"github.com/kiefbc/sooke_app/server/internal/testdb"
 	"github.com/kiefbc/sooke_app/server/internal/testdb/seeds"
 )
-
-var testDB *sql.DB
-
-func TestMain(m *testing.M) {
-	testDB = testdb.Open()
-	if testDB == nil {
-		os.Exit(0)
-	}
-	os.Exit(m.Run())
-}
 
 func TestTimeZoneValidation(t *testing.T) {
 	tests := []struct {

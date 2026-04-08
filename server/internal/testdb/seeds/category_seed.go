@@ -2,7 +2,7 @@ package seeds
 
 import "database/sql"
 
-// CategorySeed inserts 5 business categories. Leaf seed, no dependencies.
+// CategorySeed inserts 5 business categories.
 func CategorySeed(tx *sql.Tx) {
 	Exec(tx, `
 		INSERT INTO business_categories (name, slug) VALUES

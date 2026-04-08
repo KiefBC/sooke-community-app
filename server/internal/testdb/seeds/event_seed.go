@@ -67,4 +67,14 @@ func EventSeed(tx *sql.Tx) {
 			 'Spring Craft Fair', 'spring-craft-fair',
 			 NOW() + INTERVAL '21 days', 'draft');
 	`)
+
+	// 6. Approved standalone event with own coordinates (no business)
+	Exec(tx, `
+		INSERT INTO events (event_type_id, submitted_by, name, slug, latitude, longitude, starts_at, status) VALUES
+			((SELECT id FROM event_types WHERE slug = 'community-meeting'),
+			 (SELECT id FROM users WHERE clerk_id = 'seed_general_user'),
+			 'Whiffin Spit Beach Cleanup', 'whiffin-spit-beach-cleanup',
+			 48.3538, -123.7261,
+			 NOW() + INTERVAL '10 days', 'approved');
+	`)
 }

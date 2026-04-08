@@ -2,7 +2,7 @@ package seeds
 
 import "database/sql"
 
-// UserSeed inserts 3 user roles and 5 users. Leaf seed, no dependencies.
+// UserSeed inserts 3 user roles and 5 users.
 func UserSeed(tx *sql.Tx) {
 	Exec(tx, `
 		INSERT INTO user_roles (name) VALUES

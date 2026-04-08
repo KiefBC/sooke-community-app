@@ -6,22 +6,17 @@ import (
 	"time"
 
 	"github.com/kiefbc/sooke_app/server/internal/repository"
+	"github.com/kiefbc/sooke_app/server/internal/testdb/seeds"
 )
 
 func TestListCategories(t *testing.T) {
-	const setup = `
-		INSERT INTO business_categories (id, name, slug) VALUES
-		(1, 'Restaurant', 'restaurant'),
-		(2, 'Cafe', 'cafe'),
-		(3, 'Retail', 'retail');
-	`
 	tests := []struct {
 		name      string
 		wantCount int
 	}{
 		{
 			name:      "returns all categories",
-			wantCount: 3,
+			wantCount: 5,
 		},
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -35,9 +30,7 @@ func TestListCategories(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			if _, err := tx.Exec(setup); err != nil {
-				t.Fatalf("failed to set up test data: %v", err)
-			}
+			seeds.CategorySeed(tx)
 
 			categories, err := repository.ListCategories(ctx, tx)
 			if err != nil {
@@ -45,7 +38,7 @@ func TestListCategories(t *testing.T) {
 			}
 
 			if len(categories) != tt.wantCount {
-				t.Errorf("expected %d categories, got %d", tt.wantCount, len(categories))	
+				t.Errorf("expected %d categories, got %d", tt.wantCount, len(categories))
 			}
 		})
 	}

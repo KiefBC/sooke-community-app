@@ -36,6 +36,9 @@ func New(db *sql.DB) *chi.Mux {
 		r.Get("/businesses", handler.ListBusinessesHandler(db))
 		r.Get("/businesses/{slug}", handler.GetBusinessHandler(db))
 		r.Get("/categories", handler.ListCategoriesHandler(db))
+		r.Get("/events", handler.ListEventsHandler(db))
+		r.Get("/events/{slug}", handler.GetEventHandler(db))
+		r.Get("/event-types", handler.ListEventTypesHandler(db))
 	})
 
 	return r

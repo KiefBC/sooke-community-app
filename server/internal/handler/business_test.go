@@ -1,14 +1,13 @@
 package handler_test
 
 import (
-	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kiefbc/sooke_app/server/internal/handler"
 	"github.com/kiefbc/sooke_app/server/internal/repository"
+	"github.com/kiefbc/sooke_app/server/internal/testdb"
 	"github.com/kiefbc/sooke_app/server/internal/testdb/seeds"
 )
 
@@ -35,26 +34,14 @@ func TestTimeZoneValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
+			tx := testdb.WithTx(t)
 
-			h := handler.ListBusinessesHandler(tx)
-			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
-			rec := httptest.NewRecorder()
-			h(rec, req)
-
-			if rec.Code != tt.wantStatus {
-				t.Errorf("status = %d, want %d", rec.Code, tt.wantStatus)
-			}
+			rec := testdb.Exec(t, handler.ListBusinessesHandler(tx), http.MethodGet, tt.url, nil)
+			testdb.AssertStatus(t, rec, tt.wantStatus)
 
 			if tt.wantErrCode != "" {
 				var body handler.ErrorResponse
-				if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
-					t.Fatalf("failed to decode error response: %v", err)
-				}
+				testdb.DecodeJSON(t, rec, &body)
 				if body.Error.Code != tt.wantErrCode {
 					t.Errorf("error code = %q, want %q", body.Error.Code, tt.wantErrCode)
 				}
@@ -106,31 +93,17 @@ func TestListBusinesses(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
+			tx := testdb.WithTx(t, seeds.BusinessSeed)
 
-			seeds.BusinessSeed(tx)
-
-			h := handler.ListBusinessesHandler(tx)
-			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
-			rec := httptest.NewRecorder()
-			h(rec, req)
-
-			if rec.Code != tt.wantStatus {
-				t.Errorf("status = %d, want %d", rec.Code, tt.wantStatus)
-			}
+			rec := testdb.Exec(t, handler.ListBusinessesHandler(tx), http.MethodGet, tt.url, nil)
+			testdb.AssertStatus(t, rec, tt.wantStatus)
 
 			if ct := rec.Header().Get("Content-Type"); ct != tt.wantContentType {
 				t.Errorf("Content-Type = %q, want %q", ct, tt.wantContentType)
 			}
 
 			var body handler.PaginatedResponse[repository.Business]
-			if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
-			}
+			testdb.DecodeJSON(t, rec, &body)
 
 			if len(body.Items) < tt.wantMinItems {
 				t.Errorf("got %d items, want at least %d", len(body.Items), tt.wantMinItems)
@@ -142,7 +115,6 @@ func TestListBusinesses(t *testing.T) {
 				}
 			}
 
-			// Verify today_hours is present for businesses with hours seeded for today
 			if tt.name == "today_hours included for business with hours" {
 				for _, b := range body.Items {
 					if b.Slug == "sooke-harbour-house" && b.TodayHours == nil {
@@ -195,26 +167,13 @@ func TestGetBusiness(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
-
-			seeds.BusinessSeed(tx)
-
-			h := handler.GetBusinessHandler(tx)
+			tx := testdb.WithTx(t, seeds.BusinessSeed)
 
 			r := chi.NewRouter()
-			r.Get("/businesses/{slug}", h)
+			r.Get("/businesses/{slug}", handler.GetBusinessHandler(tx))
 
-			req := httptest.NewRequest(http.MethodGet, "/businesses/"+tt.slug, nil)
-			rec := httptest.NewRecorder()
-			r.ServeHTTP(rec, req)
-
-			if rec.Code != tt.wantStatus {
-				t.Fatalf("status = %d, want %d, body = %s", rec.Code, tt.wantStatus, rec.Body.String())
-			}
+			rec := testdb.Exec(t, r, http.MethodGet, "/businesses/"+tt.slug, nil)
+			testdb.AssertStatus(t, rec, tt.wantStatus)
 
 			if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
 				t.Errorf("Content-Type = %q, want application/json", ct)
@@ -222,9 +181,7 @@ func TestGetBusiness(t *testing.T) {
 
 			if tt.wantErrCode != "" {
 				var body handler.ErrorResponse
-				if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
-					t.Fatalf("failed to decode error response: %v", err)
-				}
+				testdb.DecodeJSON(t, rec, &body)
 				if body.Error.Code != tt.wantErrCode {
 					t.Errorf("error code = %q, want %q", body.Error.Code, tt.wantErrCode)
 				}
@@ -235,9 +192,7 @@ func TestGetBusiness(t *testing.T) {
 			}
 
 			var body repository.BusinessDetails
-			if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
-			}
+			testdb.DecodeJSON(t, rec, &body)
 
 			if body.Name != tt.wantName {
 				t.Errorf("name = %q, want %q", body.Name, tt.wantName)
@@ -275,31 +230,17 @@ func TestGetCategories(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
+			tx := testdb.WithTx(t, seeds.CategorySeed)
 
-			seeds.CategorySeed(tx)
-
-			h := handler.ListCategoriesHandler(tx)
-			req := httptest.NewRequest(http.MethodGet, "/api/v1/categories", nil)
-			rec := httptest.NewRecorder()
-			h(rec, req)
-
-			if rec.Code != tt.wantStatus {
-				t.Errorf("status = %d, want %d", rec.Code, tt.wantStatus)
-			}
+			rec := testdb.Exec(t, handler.ListCategoriesHandler(tx), http.MethodGet, "/api/v1/categories", nil)
+			testdb.AssertStatus(t, rec, tt.wantStatus)
 
 			if ct := rec.Header().Get("Content-Type"); ct != tt.wantContentType {
 				t.Errorf("Content-Type = %q, want %q", ct, tt.wantContentType)
 			}
 
 			var body handler.ListResponse[repository.Category]
-			if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
-			}
+			testdb.DecodeJSON(t, rec, &body)
 
 			if len(body.Items) < tt.wantMinItems {
 				t.Fatalf("got %d categories, want at least %d", len(body.Items), tt.wantMinItems)

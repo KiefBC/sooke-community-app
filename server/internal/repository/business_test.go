@@ -2,9 +2,11 @@ package repository_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/kiefbc/sooke_app/server/internal/repository"
+	"github.com/kiefbc/sooke_app/server/internal/testdb"
 	"github.com/kiefbc/sooke_app/server/internal/testdb/seeds"
 )
 
@@ -21,39 +23,27 @@ func TestGetBusinessBySlug(t *testing.T) {
 		{
 			name:      "existing business returns details",
 			slug:      "sooke-harbour-house",
-			wantNil:   false,
 			wantName:  "Sooke Harbour House",
 			wantHours: 7,
 			wantMenus: 1,
 			wantItems: 3,
 		},
 		{
-			name:      "nonexistent business returns nil",
-			slug:      "nonexistent-slug",
-			wantNil:   true,
-			wantName:  "",
-			wantHours: 0,
-			wantMenus: 0,
-			wantItems: 0,
+			name:    "nonexistent business returns nil",
+			slug:    "nonexistent-slug",
+			wantNil: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
-
-			seeds.BusinessSeed(tx)
+			tx := testdb.WithTx(t, seeds.BusinessSeed)
 
 			business, err := repository.GetBusinessBySlug(context.Background(), tx, tt.slug)
 			if err != nil {
 				t.Fatalf("GetBusinessBySlug returned error: %v", err)
 			}
 
-			// if we expect nil, assert that business is nil and return early to avoid dereferencing nil in further assertions
 			if tt.wantNil {
 				if business != nil {
 					t.Errorf("got business %+v, want nil", business)
@@ -91,7 +81,7 @@ func TestGetBusinessBySlug(t *testing.T) {
 
 func TestListBusinessesTodayHours(t *testing.T) {
 	// Edge-case businesses layered on top of the master seed.
-	// Uses EXTRACT(DOW FROM NOW()) so the inserted hours match "today" regardless of when tests run.
+	// EXTRACT(DOW FROM NOW()) so inserted hours match "today" regardless of when tests run.
 	const edgeCases = `
 		INSERT INTO businesses (category_id, name, slug, address, latitude, longitude)
 			VALUES ((SELECT id FROM business_categories WHERE slug = 'restaurant'), 'Has Hours Today', 'has-hours-today', '1 Main St', 48.35, -123.72);
@@ -109,6 +99,12 @@ func TestListBusinessesTodayHours(t *testing.T) {
 			VALUES ((SELECT id FROM businesses WHERE slug = 'closed-today'), EXTRACT(DOW FROM NOW())::int, '09:00', '17:00', true);
 	`
 
+	edgeSeed := func(tx *sql.Tx) {
+		if _, err := tx.Exec(edgeCases); err != nil {
+			panic("edge-case setup failed: " + err.Error())
+		}
+	}
+
 	tests := []struct {
 		name         string
 		search       string
@@ -122,7 +118,6 @@ func TestListBusinessesTodayHours(t *testing.T) {
 			search:       "Has Hours Today",
 			wantSlug:     "has-hours-today",
 			wantHasHours: true,
-			wantIsClosed: false,
 			wantOpenTime: "09:00:00",
 		},
 		{
@@ -149,16 +144,7 @@ func TestListBusinessesTodayHours(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
-
-			seeds.BusinessSeed(tx)
-			if _, err := tx.Exec(edgeCases); err != nil {
-				t.Fatalf("edge-case setup failed: %v", err)
-			}
+			tx := testdb.WithTx(t, seeds.BusinessSeed, edgeSeed)
 
 			businesses, _, err := repository.ListBusinesses(context.Background(), tx, tt.search, "", "America/Vancouver", 20, 0)
 			if err != nil {
@@ -205,37 +191,28 @@ func TestListBusinesses(t *testing.T) {
 	}{
 		{
 			name:      "no filters returns all businesses",
-			search:    "",
-			category:  "",
 			limit:     20,
-			offset:    0,
 			wantCount: 5,
 			wantTotal: 5,
 		},
 		{
 			name:      "search by name returns matching business",
 			search:    "Harbour",
-			category:  "",
 			limit:     20,
-			offset:    0,
 			wantCount: 1,
 			wantTotal: 1,
 		},
 		{
 			name:      "search case-insensitive",
 			search:    "moms",
-			category:  "",
 			limit:     20,
-			offset:    0,
 			wantCount: 1,
 			wantTotal: 1,
 		},
 		{
 			name:      "filter by category",
-			search:    "",
 			category:  "restaurant",
 			limit:     20,
-			offset:    0,
 			wantCount: 1,
 			wantTotal: 1,
 		},
@@ -244,32 +221,22 @@ func TestListBusinesses(t *testing.T) {
 			search:    "Cafe",
 			category:  "cafe",
 			limit:     20,
-			offset:    0,
 			wantCount: 1,
 			wantTotal: 1,
 		},
 		{
-			name:      "non-matching search returns no businesses",
-			search:    "Nonexistent",
-			category:  "",
-			limit:     20,
-			offset:    0,
-			wantCount: 0,
-			wantTotal: 0,
+			name:   "non-matching search returns no businesses",
+			search: "Nonexistent",
+			limit:  20,
 		},
 		{
 			name:      "pagination first page",
-			search:    "",
-			category:  "",
 			limit:     3,
-			offset:    0,
 			wantCount: 3,
 			wantTotal: 5,
 		},
 		{
 			name:      "pagination second page",
-			search:    "",
-			category:  "",
 			limit:     3,
 			offset:    3,
 			wantCount: 2,
@@ -277,24 +244,15 @@ func TestListBusinesses(t *testing.T) {
 		},
 		{
 			name:      "pagination with invalid offset returns no businesses",
-			search:    "",
-			category:  "",
 			limit:     20,
 			offset:    100,
-			wantCount: 0,
 			wantTotal: 5,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
-
-			seeds.BusinessSeed(tx)
+			tx := testdb.WithTx(t, seeds.BusinessSeed)
 
 			businesses, total, err := repository.ListBusinesses(context.Background(), tx, tt.search, tt.category, "America/Vancouver", tt.limit, tt.offset)
 			if err != nil {

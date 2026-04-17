@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/kiefbc/sooke_app/server/internal/repository"
+	"github.com/kiefbc/sooke_app/server/internal/testdb"
 	"github.com/kiefbc/sooke_app/server/internal/testdb/seeds"
 )
 
@@ -24,13 +25,7 @@ func TestListCategories(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
-
-			seeds.CategorySeed(tx)
+			tx := testdb.WithTx(t, seeds.CategorySeed)
 
 			categories, err := repository.ListCategories(ctx, tx)
 			if err != nil {

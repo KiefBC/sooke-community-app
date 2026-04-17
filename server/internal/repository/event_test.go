@@ -2,10 +2,12 @@ package repository_test
 
 import (
 	"context"
+	"database/sql"
 	"slices"
 	"testing"
 
 	"github.com/kiefbc/sooke_app/server/internal/repository"
+	"github.com/kiefbc/sooke_app/server/internal/testdb"
 	"github.com/kiefbc/sooke_app/server/internal/testdb/seeds"
 )
 
@@ -21,22 +23,17 @@ func TestListEvents(t *testing.T) {
 		checkFunc  func(*testing.T, []repository.Event)
 	}{
 		{
-			name:       "returns only approved events",
-			search:     "",
-			eventTypes: nil,
-			limit:      20,
-			offset:     0,
-			wantCount:  4,
-			wantTotal:  4,
+			name:      "returns only approved events",
+			limit:     20,
+			wantCount: 4,
+			wantTotal: 4,
 		},
 		{
-			name:       "search by name",
-			search:     "Jazz",
-			eventTypes: nil,
-			limit:      20,
-			offset:     0,
-			wantCount:  1,
-			wantTotal:  1,
+			name:      "search by name",
+			search:    "Jazz",
+			limit:     20,
+			wantCount: 1,
+			wantTotal: 1,
 			checkFunc: func(t *testing.T, events []repository.Event) {
 				if events[0].Slug != "friday-night-jazz" {
 					t.Errorf("expected friday-night-jazz, got %q", events[0].Slug)
@@ -44,20 +41,14 @@ func TestListEvents(t *testing.T) {
 			},
 		},
 		{
-			name:       "search by non-matching name",
-			search:     "Nonexistent Event",
-			eventTypes: nil,
-			limit:      20,
-			offset:     0,
-			wantCount:  0,
-			wantTotal:  0,
+			name:   "search by non-matching name",
+			search: "Nonexistent Event",
+			limit:  20,
 		},
 		{
 			name:       "filter by single event type",
-			search:     "",
 			eventTypes: []string{"live-music"},
 			limit:      20,
-			offset:     0,
 			wantCount:  1,
 			wantTotal:  1,
 			checkFunc: func(t *testing.T, events []repository.Event) {
@@ -68,10 +59,8 @@ func TestListEvents(t *testing.T) {
 		},
 		{
 			name:       "filter by multiple event types matches OR",
-			search:     "",
 			eventTypes: []string{"live-music", "market"},
 			limit:      20,
-			offset:     0,
 			wantCount:  2,
 			wantTotal:  2,
 			checkFunc: func(t *testing.T, events []repository.Event) {
@@ -83,22 +72,16 @@ func TestListEvents(t *testing.T) {
 			},
 		},
 		{
-			name:       "pagination returns limited results but full total",
-			search:     "",
-			eventTypes: nil,
-			limit:      1,
-			offset:     0,
-			wantCount:  1,
-			wantTotal:  4,
+			name:      "pagination returns limited results but full total",
+			limit:     1,
+			wantCount: 1,
+			wantTotal: 4,
 		},
 		{
-			name:       "COALESCE resolves coordinates from both sources",
-			search:     "",
-			eventTypes: nil,
-			limit:      20,
-			offset:     0,
-			wantCount:  4,
-			wantTotal:  4,
+			name:      "COALESCE resolves coordinates from both sources",
+			limit:     20,
+			wantCount: 4,
+			wantTotal: 4,
 			checkFunc: func(t *testing.T, events []repository.Event) {
 				for _, e := range events {
 					if e.Latitude == nil || e.Longitude == nil {
@@ -117,15 +100,10 @@ func TestListEvents(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
-
-			seeds.EventSeed(tx)
+			tx := testdb.WithTx(t, seeds.EventSeed)
 
 			events, total, err := repository.ListEvents(context.Background(), tx, tt.search, tt.eventTypes, tt.limit, tt.offset)
 			if err != nil {
@@ -147,41 +125,35 @@ func TestListEvents(t *testing.T) {
 
 func TestGetEventBySlug(t *testing.T) {
 	tests := []struct {
-		name string
-		slug string
+		name          string
+		slug          string
 		wantEventName string
-		status string
+		status        string
 	}{
 		{
-			name: "existing event",
-			slug: "friday-night-jazz",
+			name:          "existing event",
+			slug:          "friday-night-jazz",
 			wantEventName: "Friday Night Jazz",
-			status: "approved",
+			status:        "approved",
 		},
 		{
-			name: "nonexistent event",
-			slug: "nonexistent-event",
+			name:          "nonexistent event",
+			slug:          "nonexistent-event",
 			wantEventName: "",
-			status: "",
+			status:        "",
 		},
 		{
-			name: "pending review event",
-			slug: "cafe-acoustic-night",
+			name:          "pending review event",
+			slug:          "cafe-acoustic-night",
 			wantEventName: "Cafe Acoustic Night",
-			status: "pending_review",
+			status:        "pending_review",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
-			}
-			defer tx.Rollback()
+			tx := testdb.WithTx(t, seeds.EventSeed)
 
-			seeds.EventSeed(tx)
-			
 			event, err := repository.GetEventBySlug(context.Background(), tx, tt.slug)
 			if err != nil {
 				t.Fatalf("GetEventBySlug returned an error: %v", err)
@@ -209,17 +181,19 @@ func TestGetEventBySlug(t *testing.T) {
 
 func TestGetEventTypes(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		wantCount int
 		wantSlugs []string
+		seed      func(*sql.Tx)
 	}{
 		{
-			name: "returns all event types",
+			name:      "returns all event types",
 			wantCount: 3,
 			wantSlugs: []string{"live-music", "market", "community-meeting"},
+			seed:      seeds.EventSeed,
 		},
 		{
-			name: "no event types",
+			name:      "no event types",
 			wantCount: 0,
 			wantSlugs: []string{},
 		},
@@ -227,21 +201,18 @@ func TestGetEventTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tx, err := testDB.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin transaction: %v", err)
+			var tx *sql.Tx
+			if tt.seed != nil {
+				tx = testdb.WithTx(t, tt.seed)
+			} else {
+				tx = testdb.WithTx(t)
 			}
-			defer tx.Rollback()
 
-			if tt.wantCount > 0 {
-				seeds.EventSeed(tx)
-			}
-			
 			eventTypes, total, err := repository.ListEventTypes(context.Background(), tx)
 			if err != nil {
 				t.Fatalf("ListEventTypes returned an error: %v", err)
 			}
-			
+
 			if len(eventTypes) != tt.wantCount {
 				t.Errorf("ListEventTypes returned %d event types, want %d", len(eventTypes), tt.wantCount)
 			}

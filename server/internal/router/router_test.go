@@ -2,9 +2,7 @@ package router_test
 
 import (
 	"database/sql"
-	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -72,14 +70,8 @@ func TestRouter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(tt.method, tt.path, nil)
-			rec := httptest.NewRecorder()
-
-			r.ServeHTTP(rec, req)
-
-			if rec.Code != tt.wantStatusCode {
-				t.Errorf("status = %d, want %d", rec.Code, tt.wantStatusCode)
-			}
+			rec := testdb.Exec(t, r, tt.method, tt.path, nil)
+			testdb.AssertStatus(t, rec, tt.wantStatusCode)
 		})
 	}
 }
@@ -107,20 +99,11 @@ func TestHealthResponses(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := router.New(tt.db)
-			req := httptest.NewRequest(http.MethodGet, "/api/v1/health", nil)
-			rec := httptest.NewRecorder()
-
-			r.ServeHTTP(rec, req)
-
-			if rec.Code != tt.wantStatus {
-				t.Errorf("status = %d, want %d", rec.Code, tt.wantStatus)
-			}
+			rec := testdb.Exec(t, router.New(tt.db), http.MethodGet, "/api/v1/health", nil)
+			testdb.AssertStatus(t, rec, tt.wantStatus)
 
 			var resp handler.HealthResponse
-			if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
-			}
+			testdb.DecodeJSON(t, rec, &resp)
 			if resp != tt.wantBody {
 				t.Errorf("body = %+v, want %+v", resp, tt.wantBody)
 			}

@@ -21,6 +21,11 @@ type Pagination struct {
 	TotalPages int `json:"total_pages"`
 }
 
+// ListResponse represents the structure of a response that contains a list of items without pagination information. It is a generic type that can be used for any type of items.
+type ListResponse[T any] struct {
+	Items []T `json:"items"`
+}
+
 // ErrorResponse represents the structure of an error response, containing an error detail with a code and a message.
 type ErrorResponse struct {
 	Error ErrorDetail `json:"error"`

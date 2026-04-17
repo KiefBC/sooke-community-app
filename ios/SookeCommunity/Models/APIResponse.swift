@@ -7,6 +7,13 @@ struct PaginatedResponse<T: Codable & Sendable>: Codable, Sendable {
     let pagination: Pagination
 }
 
+// ListResponse wraps a list of items without pagination, used for small
+// reference lookups like categories and event types.
+// Matches the Go handler.ListResponse[T] generic type.
+struct ListResponse<T: Codable & Sendable>: Codable, Sendable {
+    let items: [T]
+}
+
 // Pagination contains page metadata included in every paginated API response.
 struct Pagination: Codable, Sendable {
     let page: Int

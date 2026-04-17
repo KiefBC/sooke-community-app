@@ -27,7 +27,7 @@ struct CategoryModelTests {
         }
         """
         let data = try #require(json.data(using: .utf8))
-        let response = try JSONDecoder().decode(CategoryListResponse.self, from: data)
+        let response = try JSONDecoder().decode(ListResponse<SookeCommunity.Category>.self, from: data)
 
         #expect(response.items.count == 2)
         #expect(response.items[0].id == 1)

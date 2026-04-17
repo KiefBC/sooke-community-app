@@ -11,32 +11,32 @@ import (
 
 func TestListEvents(t *testing.T) {
 	tests := []struct {
-		name          string
-		search        string
-		eventTypeSlug string
-		limit         int
-		offset        int
-		wantCount     int
-		wantTotal     int
-		checkFunc     func(*testing.T, []repository.Event)
+		name       string
+		search     string
+		eventTypes []string
+		limit      int
+		offset     int
+		wantCount  int
+		wantTotal  int
+		checkFunc  func(*testing.T, []repository.Event)
 	}{
 		{
-			name:          "returns only approved events",
-			search:        "",
-			eventTypeSlug: "",
-			limit:         20,
-			offset:        0,
-			wantCount:     4,
-			wantTotal:     4,
+			name:       "returns only approved events",
+			search:     "",
+			eventTypes: nil,
+			limit:      20,
+			offset:     0,
+			wantCount:  4,
+			wantTotal:  4,
 		},
 		{
-			name:          "search by name",
-			search:        "Jazz",
-			eventTypeSlug: "",
-			limit:         20,
-			offset:        0,
-			wantCount:     1,
-			wantTotal:     1,
+			name:       "search by name",
+			search:     "Jazz",
+			eventTypes: nil,
+			limit:      20,
+			offset:     0,
+			wantCount:  1,
+			wantTotal:  1,
 			checkFunc: func(t *testing.T, events []repository.Event) {
 				if events[0].Slug != "friday-night-jazz" {
 					t.Errorf("expected friday-night-jazz, got %q", events[0].Slug)
@@ -44,22 +44,22 @@ func TestListEvents(t *testing.T) {
 			},
 		},
 		{
-			name:          "search by non-matching name",
-			search:        "Nonexistent Event",
-			eventTypeSlug: "",
-			limit:         20,
-			offset:        0,
-			wantCount:     0,
-			wantTotal:     0,
+			name:       "search by non-matching name",
+			search:     "Nonexistent Event",
+			eventTypes: nil,
+			limit:      20,
+			offset:     0,
+			wantCount:  0,
+			wantTotal:  0,
 		},
 		{
-			name:          "filter by event type",
-			search:        "",
-			eventTypeSlug: "live-music",
-			limit:         20,
-			offset:        0,
-			wantCount:     1,
-			wantTotal:     1,
+			name:       "filter by single event type",
+			search:     "",
+			eventTypes: []string{"live-music"},
+			limit:      20,
+			offset:     0,
+			wantCount:  1,
+			wantTotal:  1,
 			checkFunc: func(t *testing.T, events []repository.Event) {
 				if events[0].EventTypeSlug != "live-music" {
 					t.Errorf("expected event type live-music, got %q", events[0].EventTypeSlug)
@@ -67,22 +67,38 @@ func TestListEvents(t *testing.T) {
 			},
 		},
 		{
-			name:          "pagination returns limited results but full total",
-			search:        "",
-			eventTypeSlug: "",
-			limit:         1,
-			offset:        0,
-			wantCount:     1,
-			wantTotal:     4,
+			name:       "filter by multiple event types matches OR",
+			search:     "",
+			eventTypes: []string{"live-music", "market"},
+			limit:      20,
+			offset:     0,
+			wantCount:  2,
+			wantTotal:  2,
+			checkFunc: func(t *testing.T, events []repository.Event) {
+				for _, e := range events {
+					if e.EventTypeSlug != "live-music" && e.EventTypeSlug != "market" {
+						t.Errorf("unexpected event type %q in multi-filter result", e.EventTypeSlug)
+					}
+				}
+			},
 		},
 		{
-			name:          "COALESCE resolves coordinates from both sources",
-			search:        "",
-			eventTypeSlug: "",
-			limit:         20,
-			offset:        0,
-			wantCount:     4,
-			wantTotal:     4,
+			name:       "pagination returns limited results but full total",
+			search:     "",
+			eventTypes: nil,
+			limit:      1,
+			offset:     0,
+			wantCount:  1,
+			wantTotal:  4,
+		},
+		{
+			name:       "COALESCE resolves coordinates from both sources",
+			search:     "",
+			eventTypes: nil,
+			limit:      20,
+			offset:     0,
+			wantCount:  4,
+			wantTotal:  4,
 			checkFunc: func(t *testing.T, events []repository.Event) {
 				for _, e := range events {
 					if e.Latitude == nil || e.Longitude == nil {
@@ -111,7 +127,7 @@ func TestListEvents(t *testing.T) {
 
 			seeds.EventSeed(tx)
 
-			events, total, err := repository.ListEvents(context.Background(), tx, tt.search, tt.eventTypeSlug, tt.limit, tt.offset)
+			events, total, err := repository.ListEvents(context.Background(), tx, tt.search, tt.eventTypes, tt.limit, tt.offset)
 			if err != nil {
 				t.Fatalf("ListEvents returned an error: %v", err)
 			}

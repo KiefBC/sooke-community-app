@@ -16,10 +16,10 @@ func ListEventsHandler(db repository.Querier) http.HandlerFunc {
 		defer cancel()
 
 		search := r.URL.Query().Get("search")
-		category := r.URL.Query().Get("category")
+		eventTypes := r.URL.Query()["event_type"]
 		page, perPage, offset := PaginationHelper(r)
 
-		events, total, err := repository.ListEvents(ctx, db, search, category, perPage, offset)
+		events, total, err := repository.ListEvents(ctx, db, search, eventTypes, perPage, offset)
 		if err != nil {
 			WriteError(w, http.StatusInternalServerError, "internal_error", "Failed to list events")
 			return
@@ -66,12 +66,12 @@ func ListEventTypesHandler(db repository.Querier) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), TIMEOUT)
 		defer cancel()
 
-		eventTypes, _, err := repository.ListEventTypes(ctx, db)
+		eventTypesResult, _, err := repository.ListEventTypes(ctx, db)
 		if err != nil {
 			WriteError(w, http.StatusInternalServerError, "internal_error", "Failed to list event types")
 			return
 		}
 
-		WriteJSON(w, http.StatusOK, ListResponse[repository.EventType]{Items: eventTypes})
+		WriteJSON(w, http.StatusOK, ListResponse[repository.EventType]{Items: eventTypesResult})
 	}
 }

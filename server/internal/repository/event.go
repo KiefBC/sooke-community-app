@@ -31,18 +31,18 @@ type Event struct {
 	BusinessSlug  *string    `json:"business_slug"`   // Slug of the business hosting the event, nullable (if the event is not associated with a specific business)
 }
 
-// ListEvents retrieves all events from the database, optionally filtered by search term and event type, with pagination.
-func ListEvents(ctx context.Context, q Querier, search, eventTypeSlug string, limit, offset int) ([]Event, int, error) {
+// ListEvents retrieves all events from the database, optionally filtered by search term and one or more event type slugs, with pagination. An empty eventTypes slice means no event type filter is applied.
+func ListEvents(ctx context.Context, q Querier, search string, eventTypes []string, limit, offset int) ([]Event, int, error) {
 	var countTotal int
 	err := q.QueryRowContext(ctx, `
 	SELECT COUNT(*)
 	FROM events e
 	JOIN event_types et ON e.event_type_id = et.id
 	WHERE ($1 = '' OR e.name ILIKE '%' || $1 || '%')
-	AND ($2 = '' OR et.slug = $2)
+	AND (COALESCE(cardinality($2::text[]), 0) = 0 OR et.slug = ANY($2::text[]))
 	AND e.status IN ('upcoming', 'ongoing', 'approved')
 	AND e.starts_at >= NOW()
-	`, search, eventTypeSlug).Scan(&countTotal)
+	`, search, eventTypes).Scan(&countTotal)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count events: %w", err)
 	}
@@ -53,12 +53,12 @@ func ListEvents(ctx context.Context, q Querier, search, eventTypeSlug string, li
 	JOIN event_types et ON e.event_type_id = et.id
 	LEFT JOIN businesses b ON e.business_id = b.id
 	WHERE ($1 = '' OR e.name ILIKE '%' || $1 || '%')
-	AND ($2 = '' OR et.slug = $2)
+	AND (COALESCE(cardinality($2::text[]), 0) = 0 OR et.slug = ANY($2::text[]))
 	AND e.status IN ('upcoming', 'ongoing', 'approved')
 	AND e.starts_at >= NOW()
 	ORDER BY e.starts_at ASC
 	LIMIT $3 OFFSET $4
-	`, search, eventTypeSlug, limit, offset)
+	`, search, eventTypes, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count events: %w", err)
 	}

@@ -106,11 +106,8 @@ func GetEventBySlug(ctx context.Context, q Querier, slug string) (*Event, error)
 
 // ListEventTypes retrieves all event types from the database, ordered by name.
 func ListEventTypes(ctx context.Context, q Querier) ([]EventType, int, error) {
-	var countTotal int
-	err := q.QueryRowContext(ctx, `
-	SELECT COUNT(*)
-	FROM event_types
-	`).Scan(&countTotal)
+	var count int
+	err := q.QueryRowContext(ctx, `SELECT COUNT(*) FROM event_types`).Scan(&count)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count event types: %w", err)
 	}
@@ -135,5 +132,5 @@ func ListEventTypes(ctx context.Context, q Querier) ([]EventType, int, error) {
 		eventTypes = append(eventTypes, et)
 	}
 
-	return eventTypes, countTotal, nil
+	return eventTypes, count, nil
 }

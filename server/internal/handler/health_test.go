@@ -2,25 +2,24 @@ package handler_test
 
 import (
 	"database/sql"
-	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 
 	"github.com/kiefbc/sooke_app/server/internal/database"
 	"github.com/kiefbc/sooke_app/server/internal/handler"
+	"github.com/kiefbc/sooke_app/server/internal/testdb"
 )
 
 func TestHealthHandler(t *testing.T) {
-	var testDB *sql.DB
+	var healthDB *sql.DB
 	if url := os.Getenv("TEST_DATABASE_URL"); url != "" {
 		var err error
-		testDB, err = database.Connect(url)
+		healthDB, err = database.Connect(url)
 		if err != nil {
 			t.Fatalf("failed to connect to test database: %v", err)
 		}
-		defer testDB.Close()
+		defer healthDB.Close()
 	}
 
 	tests := []struct {
@@ -39,7 +38,7 @@ func TestHealthHandler(t *testing.T) {
 		},
 	}
 
-	if testDB != nil {
+	if healthDB != nil {
 		tests = append(tests, struct {
 			name           string
 			db             *sql.DB
@@ -48,7 +47,7 @@ func TestHealthHandler(t *testing.T) {
 			wantDBStatus   string
 		}{
 			name:           "real database returns 200 ok",
-			db:             testDB,
+			db:             healthDB,
 			wantStatusCode: http.StatusOK,
 			wantStatus:     "ok",
 			wantDBStatus:   "connected",
@@ -57,25 +56,15 @@ func TestHealthHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := handler.HealthHandler(tt.db)
-			req := httptest.NewRequest(http.MethodGet, "/api/v1/health", nil)
-			rec := httptest.NewRecorder()
-
-			h(rec, req)
-
-			if rec.Code != tt.wantStatusCode {
-				t.Errorf("expected status code %d, got %d", tt.wantStatusCode, rec.Code)
-			}
+			rec := testdb.Exec(t, handler.HealthHandler(tt.db), http.MethodGet, "/api/v1/health", nil)
+			testdb.AssertStatus(t, rec, tt.wantStatusCode)
 
 			var resp handler.HealthResponse
-			if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
-			}
+			testdb.DecodeJSON(t, rec, &resp)
 
 			if resp.Status != tt.wantStatus {
 				t.Errorf("expected status %q, got %q", tt.wantStatus, resp.Status)
 			}
-
 			if resp.DBStatus != tt.wantDBStatus {
 				t.Errorf("expected db_status %q, got %q", tt.wantDBStatus, resp.DBStatus)
 			}

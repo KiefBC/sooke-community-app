@@ -5,12 +5,14 @@ import (
 	"fmt"
 )
 
+// / Category represents a business category in the database.
 type Category struct {
 	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	Name string `json:"name"` // Name of the category (e.g., "Restaurant", "Retail", "Service")
+	Slug string `json:"slug"` // URL-friendly identifier derived from the name (e.g., "restaurant", "retail", "service")
 }
 
+// / ListCategories retrieves all business categories from the database, ordered by name.
 func ListCategories(ctx context.Context, q Querier) ([]Category, error) {
 	rows, err := q.QueryContext(ctx, `
 		SELECT id, name, slug

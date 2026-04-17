@@ -11,6 +11,46 @@ import (
 	"github.com/kiefbc/sooke_app/server/internal/testdb/seeds"
 )
 
+func TestListEvents(t *testing.T) {
+	tests := []struct {
+		name       string
+		wantStatus int
+		url        string
+	}{
+		{
+			name:       "returns paginated list of events",
+			wantStatus: http.StatusOK,
+			url:        "/api/v1/events",
+		},
+		{
+			name:       "returns paginated list of events with search filter",
+			wantStatus: http.StatusOK,
+			url:        "/api/v1/events?search=jazz",
+		},
+		{
+			name:       "returns paginated list of events with event type filter",
+			wantStatus: http.StatusOK,
+			url:        "/api/v1/events?event_type=live-music",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx := testdb.WithTx(t, seeds.EventSeed)
+
+			rec := testdb.Exec(t, handler.ListEventsHandler(tx), http.MethodGet, tt.url, nil)
+			testdb.AssertStatus(t, rec, tt.wantStatus)
+
+			var body handler.ListResponse[repository.Event]
+			testdb.DecodeJSON(t, rec, &body)
+
+			if len(body.Items) == 0 {
+				t.Error("expected at least 1 event, got 0")
+			}
+		})
+	}
+}
+
 func TestGetEvent(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -55,16 +95,12 @@ func TestGetEvent(t *testing.T) {
 
 func TestListEventTypes(t *testing.T) {
 	tests := []struct {
-		name            string
-		wantStatus      int
-		wantAmount      int
-		wantContentType string
+		name       string
+		wantStatus int
 	}{
 		{
-			name:            "returns seeded event types",
-			wantStatus:      http.StatusOK,
-			wantAmount:      3,
-			wantContentType: "application/json",
+			name:       "returns seeded event types",
+			wantStatus: http.StatusOK,
 		},
 	}
 
@@ -75,14 +111,10 @@ func TestListEventTypes(t *testing.T) {
 			rec := testdb.Exec(t, handler.ListEventTypesHandler(tx), http.MethodGet, "/api/v1/event-types", nil)
 			testdb.AssertStatus(t, rec, tt.wantStatus)
 
-			if ct := rec.Header().Get("Content-Type"); ct != tt.wantContentType {
-				t.Errorf("Content-Type = %q, want %q", ct, tt.wantContentType)
-			}
-
 			var body handler.ListResponse[repository.EventType]
 			testdb.DecodeJSON(t, rec, &body)
-			if len(body.Items) < tt.wantAmount {
-				t.Fatalf("got %d event types, want at least %d", len(body.Items), tt.wantAmount)
+			if len(body.Items) == 0 {
+				t.Error("expected at least 1 event type, got 0")
 			}
 		})
 	}

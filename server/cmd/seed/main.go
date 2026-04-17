@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/kiefbc/sooke_app/server/internal/database"
@@ -308,23 +309,30 @@ func seed(db *sql.DB) error {
 		}
 	}
 
+	// Events anchor StartOffset/EndOffset to the moment the seed runs so
+	// `starts_at` is always in the future. The list handler filters on
+	// `starts_at >= NOW()`, so hardcoded absolute timestamps would silently
+	// disappear from API responses as soon as the seed date rolls past.
+	// An EndOffset of 0 means the event has no end time.
 	var seedEvents = []struct {
 		Name        string
 		Business    string
-		StartTime   string
-		EndTime     string
+		StartOffset time.Duration
+		EndOffset   time.Duration
 		Description string
 		EventType   string
 		Status      string
 	}{
-		{"Friday Night Jazz", "Sooke Harbour House", "2026-04-04T19:00:00-07:00", "2026-04-04T22:00:00-07:00", "Live jazz performance featuring local musicians at the waterfront dining room", "Live Music", "approved"},
-		{"Sooke Saturday Market", "Sooke Community Hall", "2026-04-05T09:00:00-07:00", "2026-04-05T14:00:00-07:00", "Weekly community market with local produce, crafts, and baked goods", "Market", "approved"},
+		{"Friday Night Jazz", "Sooke Harbour House", 7 * 24 * time.Hour, 7*24*time.Hour + 3*time.Hour, "Live jazz performance featuring local musicians at the waterfront dining room", "Live Music", "approved"},
+		{"Sooke Saturday Market", "Sooke Community Hall", 8 * 24 * time.Hour, 8*24*time.Hour + 5*time.Hour, "Weekly community market with local produce, crafts, and baked goods", "Market", "approved"},
 	}
 
+	now := time.Now()
 	for _, event := range seedEvents {
-		var endTime interface{}
-		if event.EndTime != "" {
-			endTime = event.EndTime
+		startsAt := now.Add(event.StartOffset)
+		var endsAt any
+		if event.EndOffset != 0 {
+			endsAt = now.Add(event.EndOffset)
 		}
 		if _, err := db.Exec(
 			`INSERT INTO events (event_type_id, submitted_by, business_id, name, slug, description, starts_at, ends_at, status)
@@ -336,7 +344,7 @@ func seed(db *sql.DB) error {
 			 )
 			 ON CONFLICT (slug) DO UPDATE SET description = $5, starts_at = $6, ends_at = $7, status = $8`,
 			event.EventType, slug.GenerateSlug(event.Business), event.Name, slug.GenerateSlug(event.Name),
-			event.Description, event.StartTime, endTime, event.Status,
+			event.Description, startsAt, endsAt, event.Status,
 		); err != nil {
 			return fmt.Errorf("failed to seed event %q: %w", event.Name, err)
 		}

@@ -296,9 +296,7 @@ func TestGetCategories(t *testing.T) {
 				t.Errorf("Content-Type = %q, want %q", ct, tt.wantContentType)
 			}
 
-			var body struct {
-				Items []repository.Category `json:"items"`
-			}
+			var body handler.ListResponse[repository.Category]
 			if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
 				t.Fatalf("failed to decode response: %v", err)
 			}

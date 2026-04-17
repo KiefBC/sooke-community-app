@@ -4,16 +4,15 @@ import (
 	"context"
 	"math"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kiefbc/sooke_app/server/internal/repository"
 )
 
+// GetBusinessHandler retrieves a single business by its slug. It returns a 404 if the business is not found.
 func GetBusinessHandler(db repository.Querier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), TIMEOUT)
 		defer cancel()
 
 		slug := chi.URLParam(r, "slug")
@@ -32,33 +31,21 @@ func GetBusinessHandler(db repository.Querier) http.HandlerFunc {
 	}
 }
 
+// ListBusinessesHandler retrieves a list of businesses based on search and category filters, along with pagination. It returns a paginated response containing the list of businesses and pagination metadata.
 func ListBusinessesHandler(db repository.Querier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), TIMEOUT)
 		defer cancel()
 
 		search := r.URL.Query().Get("search")
 		category := r.URL.Query().Get("category")
 
-		timeZone := r.URL.Query().Get("tz")
-		if timeZone == "" {
-			timeZone = "America/Vancouver"
-		} else if _, err := time.LoadLocation(timeZone); err != nil {
-			WriteError(w, http.StatusBadRequest, "invalid_parameter", "Invalid time zone")
+		timeZone, err := TimeZoneHelper(r)
+		if err != nil {
+			WriteError(w, http.StatusBadRequest, "invalid_parameter", err.Error())
 			return
 		}
-
-		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
-		if page < 1 {
-			page = 1
-		}
-
-		perPage, _ := strconv.Atoi(r.URL.Query().Get("per_page"))
-		if perPage < 1 || perPage > 100 {
-			perPage = 20
-		}
-
-		offset := (page - 1) * perPage
+		page, perPage, offset := PaginationHelper(r)
 
 		businesses, total, err := repository.ListBusinesses(ctx, db, search, category, timeZone, perPage, offset)
 		if err != nil {

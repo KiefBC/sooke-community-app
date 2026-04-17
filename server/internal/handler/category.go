@@ -19,6 +19,6 @@ func ListCategoriesHandler(db repository.Querier) http.HandlerFunc {
 			return
 		}
 
-		WriteJSON(w, http.StatusOK, map[string]any{"items": categories})
+		WriteJSON(w, http.StatusOK, ListResponse[repository.Category]{Items: categories})
 	}
 }

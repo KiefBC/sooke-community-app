@@ -6,3 +6,7 @@ struct EventType: Codable, Identifiable, Sendable, Equatable {
     let name: String
     let slug: String
 }
+
+struct EventTypeListResponse: Codable, Sendable {
+    let items: [EventType]
+}

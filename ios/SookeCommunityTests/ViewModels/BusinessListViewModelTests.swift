@@ -97,7 +97,7 @@ struct BusinessListViewModelTests {
         #expect(url?.contains("tz=") == true)
     }
     
-    @Test func filtersByCategory() async   {
+    @Test func sendsCategoryAsQueryParameter() async   {
         MockURLProtocol.reset()
         MockURLProtocol.mockResponseData = makePaginatedBusinessJSON()
         let vm = BusinessListViewModel()

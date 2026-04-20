@@ -45,6 +45,24 @@ struct APIResponseTests {
         #expect(response.pagination.totalPages == 1)
     }
 
+    @Test func decodesListResponseOfEventType() throws {
+        let json = """
+        {
+            "items": [
+                {"id": 1, "name": "Live Music", "slug": "live-music"},
+                {"id": 2, "name": "Market", "slug": "market"}
+            ]
+        }
+        """
+        let data = try #require(json.data(using: .utf8))
+        let response = try JSONDecoder().decode(ListResponse<EventType>.self, from: data)
+
+        #expect(response.items.count == 2)
+        #expect(response.items[0].id == 1)
+        #expect(response.items[0].name == "Live Music")
+        #expect(response.items[0].slug == "live-music")
+    }
+
     @Test func decodesAPIErrorResponse() throws {
         let json = """
         {

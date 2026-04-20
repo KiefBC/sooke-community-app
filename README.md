@@ -1,12 +1,14 @@
 # Sooke Community App
 
-
 <div align="center">
   <video src="https://github.com/user-attachments/assets/08efda41-16d6-4182-a9b6-3815fa9db69d" autoplay loop muted playsinline></video>
 </div>
 
-
 A mobile-first community app for Sooke, BC. Built with SwiftUI (iOS), Go, and PostgreSQL.
+
+## AI Disclosure
+
+This is not a vibe-coded app. AI was and is used as an assistant. PR Descriptions while developing use Copilot to generate, as part of the Copilit integration of Github. AI has helped with researching, learning language semantics, discussion of platforms to use and boilerplating.
 
 ## Prerequisites
 
@@ -41,7 +43,7 @@ Tests use the Swift Testing framework (`@Suite`, `@Test`).
 cp .env.example .env
 ```
 
-Fill in `DATABASE_URL` and `TEST_DATABASE_URL`. The `.env` file is gitignored.
+Fill in `DATABASE_URL` and `TEST_DATABASE_URL`.
 
 ## Go Server
 
@@ -99,16 +101,15 @@ cd server
 go run ./cmd/seed
 ```
 
-Inserts sample Sooke businesses, categories, and event types. Idempotent.
+Inserts sample Sooke businesses, categories, and event types.
 
 ## API Endpoints
 
 All routes are prefixed with `/api/v1/`.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/v1/health` | Health check -- returns app and database status |
-| GET | `/api/v1/businesses` | List businesses (supports `?search=`, `?category=`, `?page=`, `?per_page=`) |
-| GET | `/api/v1/businesses/{slug}` | Get a single business by slug |
-| GET | `/api/v1/categories` | List all business categories |
-
+| Method | Path                        | Description                                                                 |
+| ------ | --------------------------- | --------------------------------------------------------------------------- |
+| GET    | `/api/v1/health`            | Health check -- returns app and database status                             |
+| GET    | `/api/v1/businesses`        | List businesses (supports `?search=`, `?category=`, `?page=`, `?per_page=`) |
+| GET    | `/api/v1/businesses/{slug}` | Get a single business by slug                                               |
+| GET    | `/api/v1/categories`        | List all business categories                                                |

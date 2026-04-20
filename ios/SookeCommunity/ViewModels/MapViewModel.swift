@@ -52,7 +52,7 @@ final class MapViewModel {
         isLoadingCategories = true
         error = nil
         do {
-            let response: CategoryListResponse = try await apiClient.get("/api/v1/categories")
+            let response: ListResponse<Category> = try await apiClient.get("/api/v1/categories")
             categories = response.items
         } catch {
             self.error = error

@@ -325,6 +325,11 @@ func seed(db *sql.DB) error {
 	}{
 		{"Friday Night Jazz", "Sooke Harbour House", 7 * 24 * time.Hour, 7*24*time.Hour + 3*time.Hour, "Live jazz performance featuring local musicians at the waterfront dining room", "Live Music", "approved"},
 		{"Sooke Saturday Market", "Sooke Community Hall", 8 * 24 * time.Hour, 8*24*time.Hour + 5*time.Hour, "Weekly community market with local produce, crafts, and baked goods", "Market", "approved"},
+		{"Tuesday Open Mic Night", "Mom's Cafe", 3 * 24 * time.Hour, 3*24*time.Hour + 2*time.Hour, "Grab the mic and share a song, poem, or story with the Tuesday regulars", "Live Music", "approved"},
+		{"Harbour Cleanup Day", "Sooke Landing Marina", 10 * 24 * time.Hour, 10*24*time.Hour + 4*time.Hour, "Volunteer shoreline cleanup along the marina boardwalk, gloves and bags provided", "Community Meeting", "approved"},
+		{"Holiday Artisan Market", "Sooke Community Hall", 21 * 24 * time.Hour, 21*24*time.Hour + 8*time.Hour, "Over 40 local artisans selling handmade gifts, preserves, and art for the holiday season", "Market", "pending_review"},
+		{"Coffee Cupping Experience", "The Stick In The Mud's Roastoreum", 5 * 24 * time.Hour, 0, "Walk-in tasting of this week's single origins with the head roaster, no RSVP needed", "Community Meeting", "approved"},
+		{"Salmon Season Kickoff", "King Tide Fishing Charters", 28 * 24 * time.Hour, 28*24*time.Hour + 6*time.Hour, "Early-morning send-off for the opening of salmon season with coffee and chowder on the dock", "Community Meeting", "cancelled"},
 	}
 
 	now := time.Now()

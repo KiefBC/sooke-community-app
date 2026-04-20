@@ -34,7 +34,7 @@ struct EventModelTests {
     @Test func decodeEventWithAllFields() throws {
         
         let data = seedData.data(using: .utf8)!
-        let event = try JSONDecoder().decode(Event.self, from: data)
+        let event = try JSONDecoder().decode(EventDetails.self, from: data)
         
         #expect(event.id == 1)
         #expect(event.name == "Summer Music Festival")

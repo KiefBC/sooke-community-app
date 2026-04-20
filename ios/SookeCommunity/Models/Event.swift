@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Event: Codable, Identifiable, Sendable, Hashable {
+struct EventDetails: Codable, Identifiable, Sendable, Hashable {
     let id: Int64
     let name: String
     let slug: String
